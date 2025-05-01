@@ -1,6 +1,6 @@
 # SINISVIAL
 CASOS DE USO
-https://miro.com/welcomeonboard/N3lKbkVUenFoVm9lYy9FcFc2MHlKb2VGTVY1UHZ6aFlVTVFtR2NzUSs0TXR5L1k0eGZqNjhiNEMreitvWmhvcE41RGNNdmpaOVJFSWdYampzV1pSZ1ZQZG0veVcrNndtR0hIWkxPVXR5OFVuZXNJUFBjeFdoTkpXWm4ySDFxNC90R2lncW1vRmFBVnlLcVJzTmdFdlNRPT0hdjE=?share_link_id=270116704504
+[DIAGRAMA](https://goo.su/FozYye9)
 DOCUMENTACION
 [DOCUMENTACIÓN CASOS DE USO SINISVIAL.pdf](https://github.com/user-attachments/files/20002792/DOCUMENTACION.CASOS.DE.USO.SINISVIAL.pdf)
 [DOCUMENTACIÓN CASOS DE USO (Usuario Invitado).pdf](https://github.com/user-attachments/files/20002800/DOCUMENTACION.CASOS.DE.USO.Usuario.Invitado.pdf)
