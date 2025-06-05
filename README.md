@@ -13,12 +13,5 @@ DOCUMENTACION
 [DOCUMENTACIÓN CASOS DE USO (Administrador).pdf](https://github.com/user-attachments/files/20002802/DOCUMENTACION.CASOS.DE.USO.Administrador.pdf)
 [DOCUMENTACIÓN CASOS DE USO (Autoridades).pdf](https://github.com/user-attachments/files/20002804/DOCUMENTACION.CASOS.DE.USO.Autoridades.pdf)
 
-SECIONES DE APLICACION
-[SeccionesAplicacion.docx](https://github.com/user-attachments/files/19852059/SeccionesAplicacion.docx)
 
-REQUERIMIENTOS FUNCIONALES Y NO FUNCIONALES
-[REQUERIMIENTOS FUNCIONALES Y NO FUNCIONALES.docx] (https://github.com/SergioMotab/SINISVIAL/blob/506ac4a378efeaa79cd0c50ca7cfcad575fb6655/REQUERIMIENTOS%20FUNCIONALES%20Y%20NO%20FUNCIONALES.docx)
-
-TAREAS ESPECIFICAS POR REQUERIMIENTO
-[Tareas_Especificas.docx] 
 
