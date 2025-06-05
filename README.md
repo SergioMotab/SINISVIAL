@@ -13,5 +13,6 @@ DOCUMENTACION
 [DOCUMENTACIÓN CASOS DE USO (Administrador).pdf](https://github.com/user-attachments/files/20002802/DOCUMENTACION.CASOS.DE.USO.Administrador.pdf)
 [DOCUMENTACIÓN CASOS DE USO (Autoridades).pdf](https://github.com/user-attachments/files/20002804/DOCUMENTACION.CASOS.DE.USO.Autoridades.pdf)
 
-
+SECCIONES APLICACION
+[SeccionesAplicacion.docx](https://github.com/SergioMotab/SINISVIAL/blob/main/SeccionesAplicacion.docx)
 
