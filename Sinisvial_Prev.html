@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinisVial ⚠️</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  </head>
+  <body>
+    <!-- Barra de navegación -->
+    <nav class="blue darken-3" id="navbar">
+      <div class="nav-wrapper">
+        <a href="#" class="brand-logo">SinisVial ⚠️</a>
+        <ul id="nav-mobile" class="right hide-on-med-and-down">
+          <li>
+            <div class="input-field" style="margin: 0; padding: 0;">
+              <input id="search-address" type="text" placeholder="Buscar dirección">
+            </div>
+          </li>
+          <li><a href="#tutorial" id="tutorial-btn">Tutorial</a></li>
+          <li><a href="#reportar" id="report-btn">Reportar Incidente</a></li>
+          <li><a href="#emergencia" id="emergency-btn">Emergencia</a></li>
+          <li><a href="#markers-list" id="show-markers-btn">Ver Marcadores</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Mapa -->
+    <div id="map"></div>
+
+    <!-- Modal de Login -->
+    <div id="login" class="modal">
+      <div class="modal-content">
+        <h4>Ingresar</h4>
+        <div class="input-field">
+          <input type="text" id="login-name" placeholder="Nombre">
+          <label for="login-name">Nombre</label>
+        </div>
+        <div class="input-field">
+          <input type="password" id="login-password" placeholder="Contraseña">
+          <label for="login-password">Contraseña</label>
+        </div>
+        <button class="btn blue" id="login-submit">Ingresar</button>
+        <button class="btn green" id="login-guest">Ingresar sin registrar</button>
+      </div>
+    </div>
+
+    <!-- Modal de Registro -->
+    <div id="register" class="modal">
+      <div class="modal-content">
+        <h4>Registrarse</h4>
+        <div class="input-field">
+          <input type="text" id="register-name" placeholder="Nombre">
+          <label for="register-name">Nombre</label>
+        </div>
+        <div class="input-field">
+          <input type="password" id="register-password" placeholder="Contraseña">
+          <label for="register-password">Contraseña</label>
+        </div>
+        <button class="btn blue" id="register-submit">Registrarse</button>
+      </div>
+    </div>
+
+    <!-- Modal de Reportar Incidente -->
+    <div id="reportar" class="modal">
+      <div class="modal-content">
+        <h4>Reportar Incidente</h4>
+        <div class="input-field">
+          <input type="text" id="incidente-descripcion" placeholder="Descripción del incidente">
+          <label for="incidente-descripcion">Descripción</label>
+        </div>
+        <div class="input-field">
+          <select id="tipo-marcador">
+            <option value="danger">Peligro</option>
+            <option value="caution">Precaución</option>
+            <option value="no-entry">No Pase</option>
+            <option value="accident">Accidente</option>
+          </select>
+          <label>Tipo de Marcador</label>
+        </div>
+        <button class="btn blue" id="confirmar-reporte">Confirmar</button>
+      </div>
+    </div>
+
+    <!-- Modal de Descripción del Marcador -->
+    <div id="marker-description" class="modal">
+      <div class="modal-content">
+        <h4>Descripción del Marcador</h4>
+        <p id="marker-description-text"></p>
+      </div>
+      <div class="modal-footer">
+        <a href="#!" class="modal-close btn blue">Cerrar</a>
+      </div>
+    </div>
+
+    <!-- Lista de marcadores -->
+    <div id="markers-list" class="modal">
+      <div class="modal-content">
+        <h4>Marcadores Reportados</h4>
+        <ul id="markers-list-content"></ul>
+      </div>
+      <div class="modal-footer">
+        <a href="#!" class="modal-close btn blue">Cerrar</a>
+      </div>
+    </div>
+
+    <!-- Tutorial -->
+    <div id="tutorial" class="modal">
+      <div class="modal-content">
+        <h4>¿Cómo usar SinisVial?</h4>
+        <p>1. <strong>Buscar dirección:</strong> Usa el campo de búsqueda para encontrar una ubicación.</p>
+        <p>2. <strong>Reportar un incidente:</strong> Haz clic en el botón "Reportar Incidente" y selecciona la ubicación en el mapa.</p>
+        <p>3. <strong>Ver marcadores:</strong> Usa el botón "Ver Marcadores" para ver todos los marcadores reportados.</p>
+        <p>4. <strong>Eliminar marcadores:</strong> Haz clic en un marcador y selecciona "Eliminar".</p>
+      </div>
+      <div class="modal-footer">
+        <a href="#!" class="modal-close btn blue">Cerrar</a>
+      </div>
+    </div>
+
+    <!-- Botón de emergencia -->
+    <div id="emergencia" class="modal">
+      <div class="modal-content">
+        <h4>¿Necesitas ayuda de emergencia?</h4>
+        <p>Presiona el botón para contactar a los servicios de emergencia.</p>
+        <button class="btn red" id="llamar-emergencia">Llamar al 911</button>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
