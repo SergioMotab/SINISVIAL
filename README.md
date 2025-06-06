@@ -18,3 +18,18 @@ SECCIONES APLICACION
 
 REQUERIMIENTOS FUNCIONALES Y NO FUNCIONALES
 [REQUERIMIENTOS FUNCIONALES Y NO FUNCIONALES.docx](https://github.com/SergioMotab/SINISVIAL/blob/main/REQUERIMIENTOS%20FUNCIONALES%20Y%20NO%20FUNCIONALES.docx)
+
+TAREAS ESPECIFICAS POR REQUERIMIENTO
+[Tareas_Especificas.docx](https://github.com/SergioMotab/SINISVIAL/blob/main/Tareas_Especificas.docx)
+
+VALORACION DE REQUERIMIENTOS
+[valoracion funcionalidades.xlsx](https://github.com/SergioMotab/SINISVIAL/blob/main/valoracion%20funcionalidades.xlsx)
+
+DIAGRAMA DE FLUJO
+[diagrama.pdf](https://github.com/SergioMotab/SINISVIAL/blob/main/diagrama.pdf)
+
+MAPA DEL SITIO
+[Mapa del sitio SINISVIAL.pdf](https://github.com/SergioMotab/SINISVIAL/blob/main/Mapa%20del%20sitio%20SINISVIAL.pdf)
+
+DISEÑO DE WIREFLOW
+[Captura wireflow.PNG](https://github.com/SergioMotab/SINISVIAL/blob/main/Captura%20wireflow.PNG)
