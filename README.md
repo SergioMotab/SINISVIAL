@@ -28,6 +28,12 @@ VALORACIÓN DE REQUERIMIENTOS
 DIAGRAMA DE FLUJO
 [diagrama.pdf](https://github.com/SergioMotab/SINISVIAL/blob/main/diagrama.pdf)
 
+DIAGRAMA DE COMPONENTES
+[DIAGRAMA DE COMPONENTES.png](https://github.com/SergioMotab/SINISVIAL/blob/b2cfa31411fb5811d5abf15323e3049e0a787bd4/DIAGRAMA%20DE%20COMPONENTES.png)
+
+DIAGRAMA DE DESPLIEGUE
+[DIAGRAMA DE DESPLIEGUE.jpg](https://github.com/SergioMotab/SINISVIAL/blob/b2cfa31411fb5811d5abf15323e3049e0a787bd4/DIAGRAMA%20DE%20DESPLIEGUE.jpg)
+
 MAPA DEL SITIO
 [Mapa del sitio SINISVIAL.pdf](https://github.com/SergioMotab/SINISVIAL/blob/main/Mapa%20del%20sitio%20SINISVIAL.pdf)
 
