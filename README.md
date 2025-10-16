@@ -42,3 +42,6 @@ DISEÑO DE WIREFLOW
 
 CÓDIGO
 [Sinisvial_Prev.html](https://github.com/SergioMotab/SINISVIAL/blob/main/Sinisvial_Prev.html)
+
+PROTOTIPO
+[PROTOTIPO](https://github.com/SergioMotab/SINISVIAL/blob/c1abebc9791df843d4b6e8b3a2dbc9212601dc5a/PROTOTIPO)
