@@ -11,3 +11,6 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
 
 
 
+setTimeout(() => {
+    map.invalidateSize();
+}, 500);
