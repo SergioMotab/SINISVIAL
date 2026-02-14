@@ -10,20 +10,27 @@ document.addEventListener('DOMContentLoaded', function() {
   var modals = document.querySelectorAll('.modal');
   M.Modal.init(modals);
 
-  // Inicializar mapa de Mapbox
-  mapboxgl.accessToken = 'TU_MAPBOX_ACCESS_TOKEN'; // Reemplaza con tu token
-  var map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/streets-v11',
-    center: [-74.08175, 4.60971], // Bogotá por defecto
-    zoom: 12
-  });
 
-  // Ejemplo de marcador
-  var marker = new mapboxgl.Marker()
-    .setLngLat([-74.08175, 4.60971])
-    .setPopup(new mapboxgl.Popup().setHTML('<b>Ejemplo de marcador</b>'))
-    .addTo(map);
+  // Inicializar Google Maps
+  var map;
+  function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: { lat: 4.60971, lng: -74.08175 }, // Bogotá
+      zoom: 12
+    });
+    // Ejemplo de marcador
+    new google.maps.Marker({
+      position: { lat: 4.60971, lng: -74.08175 },
+      map: map,
+      title: 'Ejemplo de marcador'
+    });
+  }
+  // Esperar a que Google Maps esté listo
+  if (typeof google !== 'undefined' && google.maps) {
+    initMap();
+  } else {
+    window.initMap = initMap;
+  }
 
   // Botón de emergencia
   document.getElementById('llamar-emergencia').addEventListener('click', function() {
