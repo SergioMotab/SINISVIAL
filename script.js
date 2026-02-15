@@ -68,3 +68,47 @@ map.on('click',function(e){
     instance.open();
 
 })
+
+
+// crear motor busqueda
+
+const motorBusqueda = L.Control.geocoder.nominatim();
+
+document.getElementById('search-address').addEventListener('keypress',function(e){
+    if (e.key === 'Enter'){
+        const direccion = e.target.value;
+
+        motorBusqueda.geocode(direccion,function(results){
+            if (results.lenght > 0){
+                const r = results[0];
+                map.setView(r.center,16);
+
+                L.marker(r.center).addTo(map)
+                .bindPopup("ubicacion encontrada"+r.name)
+                .openPopup();
+            } else{
+                M.toast({html: 'No se encontró la dirección en Bogotá'})
+            }
+        })
+    }
+})
+
+map.on('click',function(e) {
+    const coordenadas = e.latlng;
+
+    L.marker(coordenadas).addTo(map)
+       .bindPopup("¿Reportar incidente aquí?")
+         .openPopup();
+
+
+         //abrir formulario reporte
+
+    const elem = document.getElementById('reportar');
+    const instance = M.Modal.getInstance(elem);
+    instance.open();
+    
+    
+    //guardar coordenadas
+
+    window.ultimaUbicacionClic = coordenadas;
+})
