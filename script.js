@@ -64,11 +64,11 @@ map.on('click',function(e) {
     }
 
     marcadorTemporal = L.marker(coordenadas).addTo(map)
-           .binPopup("¿Reportar incidente aqui?")
+           .bindPopup("¿Reportar incidente aqui?")
               .openPopup();
 
     // abrir modal
-    const elem  = document.getElementById('report');
+    const elem  = document.getElementById('reportar');
     const instance = M.Modal.getInstance(elem);
     instance.open();
 
@@ -77,3 +77,13 @@ map.on('click',function(e) {
     window.coordenadasIncidente = coordenadas;
     console.log("coordenadas capturadas: ",coordenadas);
 })
+
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    var modales = document.querySelectorAll('.modal');
+    M.Modal.init(modales);
+
+    var selectores = document.querySelectorAll('select');
+    M.FormSelect.init(selectores);
+});
