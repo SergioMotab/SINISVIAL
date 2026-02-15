@@ -1,5 +1,6 @@
 
-document.getElementById('map').style.height = "400px"
+document.getElementById('map').style.height = "calc(100vh - 64px)";
+document.getElementById('map').style.width = "100%";
 
 var map = L.map('map').setView([51.505,-0.09],13);
 
@@ -10,7 +11,8 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
 
 
 
-
-setTimeout(() => {
-    map.invalidateSize();
-}, 500);
+window.addEventListener('load',function(){
+    setTimeout(() => {
+        map.invalidateSize();
+    },200);
+});
