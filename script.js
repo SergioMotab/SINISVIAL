@@ -1,106 +1,119 @@
-
+// 1. CONFIGURACIÓN INICIAL DEL MAPA
+// Ajuste de dimensiones del contenedor
 document.getElementById('map').style.height = "calc(100vh - 64px)";
 document.getElementById('map').style.width = "100%";
 
-var map = L.map('map').setView([4.6097,-74.0817],12);
+// Inicialización de la vista en Bogotá
+var map = L.map('map').setView([4.6097, -74.0817], 12);
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+// Capa de mapa base de OpenStreetMap
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    attribution: '&copy; <a href= "https://www.openstreetmap.org"/copyright>OpenStreetMap</a>'
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
-
-
-window.addEventListener('load',function(){
-    setTimeout(() => {
-        map.invalidateSize();
-    },200);
+// Solución para errores de renderizado en la carga inicial
+window.addEventListener('load', function() {
+    setTimeout(() => { map.invalidateSize(); }, 200);
 });
 
-
-
-// agregar un marcador
-
-var marker = L.marker([4.6097,-74.0817]).addTo(map);
-
-var circle = L.circle([4.6099,-74.0819],{
+// 2. ELEMENTOS GRÁFICOS PREDEFINIDOS (Ejemplos)
+var marker = L.marker([4.6097, -74.0817]).addTo(map);
+var circle = L.circle([4.6099, -74.0819], {
     color: 'red',
     fillColor: '#f03',
     fillOpacity: 0.5,
     radius: 500
 }).addTo(map);
 
-
-// motor de busqueda
+// 3. VARIABLES GLOBALES PARA REPORTES
 var marcadorTemporal;
+var listaDeReportes = []; // Para el Requerimiento de "Ver Marcadores"
 const motorBusqueda = L.Control.Geocoder.nominatim();
 
+// 4. LÓGICA PRINCIPAL (Al cargar el DOM)
 document.addEventListener('DOMContentLoaded', function() {
-
+    // Inicializar componentes de Materialize (Modales y Selects)
     M.Modal.init(document.querySelectorAll('.modal'));
     M.FormSelect.init(document.querySelectorAll('select'));
 
+    // --- FUNCIONALIDAD: BUSCADOR DE DIRECCIONES (RF 2) ---
     const inputBusqueda = document.getElementById('search-address');
+    if (inputBusqueda) {
+        inputBusqueda.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Evita recarga de página
+                const direccion = e.target.value;
+                if (!direccion) return;
 
-    inputBusqueda.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
+                // Geocodificación enfocada en Bogotá
+                motorBusqueda.geocode(direccion + ", Bogotá", function(results) {
+                    if (results && results.length > 0) {
+                        const r = results[0];
+                        map.setView(r.center, 16);
+                        L.marker(r.center).addTo(map)
+                            .bindPopup("<b>Ubicación:</b><br>" + r.name)
+                            .openPopup();
+                    } else {
+                        M.toast({html: 'No se encontró la dirección', classes: 'red'});
+                    }
+                });
+            }
+        });
+    }
 
-            const direccion = e.target.value;
-            if (!direccion) return;
+    // --- FUNCIONALIDAD: CONFIRMAR REPORTE (RF 3) ---
+    const btnConfirmar = document.getElementById('confirmar-reporte');
+    if (btnConfirmar) {
+        btnConfirmar.addEventListener('click', function() {
+            const descripcion = document.getElementById('incidente-descripcion').value;
+            const tipo = document.getElementById('tipo-marcador').value;
 
-            motorBusqueda.geocode(direccion + ",Bogotá", function(results) {
-                if (results.length > 0) {
-                    const r = results[0];
-                    map.setView(r.center, 16);
+            if (window.coordenadasIncidente) {
+                // Crear marcador permanente con la información
+                const nuevoMarcador = L.marker(window.coordenadasIncidente).addTo(map)
+                    .bindPopup(`<b>TIPO: ${tipo.toUpperCase()}</b><br>DESCRIPCIÓN: ${descripcion}`)
+                    .openPopup();
 
-                    L.marker(r.center).addTo(map)
-                        .bindPopup(r.name)
-                        .openPopup();
-                } else {
-                    M.toast({html: 'Dirección no encontrada', classes: 'red'});
-                }
-            })
-        }
-    })
-});
+                // Guardar en la lista para el historial
+                listaDeReportes.push({ tipo, descripcion, coords: window.coordenadasIncidente });
 
-// Logica boton confirmar
-
-const btnConfirmar = document.getElementById('confirmar reporte');
-if (btnConfirmar){
-    btnConfirmar.addEventListener('click', function() {
-        const descripcion = document.getElementById('descripcion').value;
-        const tipo = document.getElementById('tipo').value;
-
-        if (window.coordenadasIncidente) {
-
-            L.marker(window.coordenadasIncidente).addTo(map)
-                .bindPopup(`<b>${tipo}</b><br>${descripcion}`)
-                .openPopup();
-
+                // Limpiar marcador azul temporal
                 if (marcadorTemporal) map.removeLayer(marcadorTemporal);
 
-                //aviso al usuario
-                M.Modal.getInstance(document.getElementById('reportar')).close();
-                M.toast({html: 'Reporte enviado con éxito', classes: 'green'});
-        }
+                // CERRAR MODAL Y LIMPIAR
+                const instance = M.Modal.getInstance(document.getElementById('reportar'));
+                instance.close();
+                document.getElementById('incidente-descripcion').value = "";
+                
+                M.toast({html: '✅ Reporte registrado con éxito', classes: 'green'});
+            } else {
+                M.toast({html: '❌ Primero selecciona un punto en el mapa', classes: 'orange'});
+            }
+        });
+    }
 });
-}
 
-// captura click
-
+// 5. EVENTO: SELECCIÓN DE PUNTO POR CLIC (RF 3)
 map.on('click', function(e) {
     const coordenadas = e.latlng;
+    
+    // Eliminar el marcador previo si el usuario cambia de opinión antes de confirmar
+    if (marcadorTemporal) {
+        map.removeLayer(marcadorTemporal);
+    }
 
-    if (marcadorTemporal) map.removeLayer(marcadorTemporal);
-
+    // Colocar marcador temporal azul
     marcadorTemporal = L.marker(coordenadas).addTo(map)
-               .bindPopup('Ubicación del incidente')
-                .openPopup();
+        .bindPopup("¿Reportar incidente aquí?")
+        .openPopup();
 
-                window.coordenadasIncidente = coordenadas;
+    // Guardar coordenadas para usarlas en el botón de confirmar
+    window.coordenadasIncidente = coordenadas;
 
-                const instance = M.Modal.getInstance(document.getElementById('reportar'));
-                if (instance) instance.open();
+    // Abrir el modal automáticamente
+    const instance = M.Modal.getInstance(document.getElementById('reportar'));
+    if (instance) {
+        instance.open();
+    }
 });
