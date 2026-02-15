@@ -31,84 +31,49 @@ var circle = L.circle([4.6099,-74.0819],{
 }).addTo(map);
 
 
-//inicializar el geocodificador
+// motor de busqueda
 
-var geocoder = L.Control.Geocoder({
-    defaultMarkGeoCode: false,
-    placeholder: "Buscar direccion en Bogotá...",
-    errorMessage: "No se logro encontrar la ubicación"
-})
-.on('markgeocode',function(e){
-    var bbox = e.geocode.bbox;
-    var poly = L.polygon([
-        bbox.getSouthEast(),
-        bbox.getNorthEast(),
-        bbox.getNorthWest(),
-        bbox.getSouthWest()
-    ]);
-    map.fitBounds(poly.getBounds());
-})
-.addTo(map);
-
-//variable global guardado click usuario
-
-var marcadorTemporal;
-map.on('click',function(e){
-    if (marcadorTemporal){
-        map.removeLayer(marcadorTemporal);
-    }
-
-    // 2.Poner un marcador donde el usuario le dio click
-
-    marcadorTemporal = L.marker(e.latlng).addTo(map);
-
-    //3. Abrir el modal de reporte automaticamente
-
-    var instance = M.Modal.getInstance(document.getElementById('reportar'));
-    instance.open();
-
-})
-
-
-// crear motor busqueda
-
-const motorBusqueda = L.Control.geocoder.nominatim();
+const motorBusqueda = L.Control.Geocoder.nominatim();
 
 document.getElementById('search-address').addEventListener('keypress',function(e){
     if (e.key === 'Enter'){
+        e.preventDefault(); 
         const direccion = e.target.value;
 
-        motorBusqueda.geocode(direccion,function(results){
-            if (results.lenght > 0){
+        motorBusqueda.geocode(direccion,function(results) {
+            if (results && results.length > 0 ) {
                 const r = results[0];
-                map.setView(r.center,16);
+                map.setView(r.center, 16);
 
                 L.marker(r.center).addTo(map)
-                .bindPopup("ubicacion encontrada"+r.name)
-                .openPopup();
+                    .bindPopup("<b>Ubicacion encontrada : </b>"+ r.name)
+                    .openPopup();
             } else{
-                M.toast({html: 'No se encontró la dirección en Bogotá'})
+                M.toast({html: 'No se encontró la dirección. Intente con otra.', classes: 'red'});
             }
-        })
+        });
     }
-})
+});
+
+var marcadorTemporal;
 
 map.on('click',function(e) {
     const coordenadas = e.latlng;
+    if (marcadorTemporal) {
+        map.removeLayer(marcadorTemporal);
+    }
 
-    L.marker(coordenadas).addTo(map)
-       .bindPopup("¿Reportar incidente aquí?")
-         .openPopup();
+    marcadorTemporal = L.marker(coordenadas).addTo(map)
+           .binPopup("¿Reportar incidente aqui?")
+              .openPopup();
 
-
-         //abrir formulario reporte
-
-    const elem = document.getElementById('reportar');
+    // abrir modal
+    const elem  = document.getElementById('report');
     const instance = M.Modal.getInstance(elem);
     instance.open();
-    
-    
-    //guardar coordenadas
 
-    window.ultimaUbicacionClic = coordenadas;
+    //Guardar 
+
+    window.coordenadasIncidente = coordenadas;
+    console.log("coordenadas capturadas: ",coordenadas);
 })
