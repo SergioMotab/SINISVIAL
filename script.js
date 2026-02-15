@@ -32,58 +32,75 @@ var circle = L.circle([4.6099,-74.0819],{
 
 
 // motor de busqueda
-
-const motorBusqueda = L.Control.Geocoder.nominatim();
-
-document.getElementById('search-address').addEventListener('keypress',function(e){
-    if (e.key === 'Enter'){
-        e.preventDefault(); 
-        const direccion = e.target.value;
-
-        motorBusqueda.geocode(direccion,function(results) {
-            if (results && results.length > 0 ) {
-                const r = results[0];
-                map.setView(r.center, 16);
-
-                L.marker(r.center).addTo(map)
-                    .bindPopup("<b>Ubicacion encontrada : </b>"+ r.name)
-                    .openPopup();
-            } else{
-                M.toast({html: 'No se encontró la dirección. Intente con otra.', classes: 'red'});
-            }
-        });
-    }
-});
-
 var marcadorTemporal;
-
-map.on('click',function(e) {
-    const coordenadas = e.latlng;
-    if (marcadorTemporal) {
-        map.removeLayer(marcadorTemporal);
-    }
-
-    marcadorTemporal = L.marker(coordenadas).addTo(map)
-           .bindPopup("¿Reportar incidente aqui?")
-              .openPopup();
-
-    // abrir modal
-    const elem  = document.getElementById('reportar');
-    const instance = M.Modal.getInstance(elem);
-    instance.open();
-
-    //Guardar 
-
-    window.coordenadasIncidente = coordenadas;
-    console.log("coordenadas capturadas: ",coordenadas);
-})
-
+const motorBusqueda = L.Control.Geocoder.nominatim();
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    var modales = document.querySelectorAll('.modal');
-    M.Modal.init(modales);
+    M.Modal.init(document.querySelectorAll('.modal'));
+    M.FormSelect.init(document.querySelectorAll('select'));
 
-    var selectores = document.querySelectorAll('select');
-    M.FormSelect.init(selectores);
+    const inputBusqueda = document.getElementById('search-address');
+
+    inputBusqueda.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+
+            const direccion = e.target.value;
+            if (!direccion) return;
+
+            motorBusqueda.geocode(direccion + ",Bogotá", function(results) {
+                if (results.length > 0) {
+                    const r = results[0];
+                    map.setView(r.center, 16);
+
+                    L.marker(r.center).addTo(map)
+                        .bindPopup(r.name)
+                        .openPopup();
+                } else {
+                    M.toast({html: 'Dirección no encontrada', classes: 'red'});
+                }
+            })
+        }
+    })
+});
+
+// Logica boton confirmar
+
+const btnConfirmar = document.getElementById('confirmar reporte');
+if (btnConfirmar){
+    btnConfirmar.addEventListener('click', function() {
+        const descripcion = document.getElementById('descripcion').value;
+        const tipo = document.getElementById('tipo').value;
+
+        if (window.coordenadasIncidente) {
+
+            L.marker(window.coordenadasIncidente).addTo(map)
+                .bindPopup(`<b>${tipo}</b><br>${descripcion}`)
+                .openPopup();
+
+                if (marcadorTemporal) map.removeLayer(marcadorTemporal);
+
+                //aviso al usuario
+                M.Modal.getInstance(document.getElementById('reportar')).close();
+                M.toast({html: 'Reporte enviado con éxito', classes: 'green'});
+        }
+});
+}
+
+// captura click
+
+map.on('click', function(e) {
+    const coordenadas = e.latlng;
+
+    if (marcadorTemporal) map.removeLayer(marcadorTemporal);
+
+    marcadorTemporal = L.marker(coordenadas).addTo(map)
+               .bindPopup('Ubicación del incidente')
+                .openPopup();
+
+                window.coordenadasIncidente = coordenadas;
+
+                const instance = M.Modal.getInstance(document.getElementById('reportar'));
+                if (instance) instance.open();
 });
