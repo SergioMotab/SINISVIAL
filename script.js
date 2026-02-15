@@ -1,23 +1,18 @@
-// 1. CONFIGURACIÓN INICIAL DEL MAPA
-// Ajuste de dimensiones del contenedor
+
 document.getElementById('map').style.height = "calc(100vh - 64px)";
 document.getElementById('map').style.width = "100%";
 
-// Inicialización de la vista en Bogotá
 var map = L.map('map').setView([4.6097, -74.0817], 12);
 
-// Capa de mapa base de OpenStreetMap
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
-// Solución para errores de renderizado en la carga inicial
 window.addEventListener('load', function() {
     setTimeout(() => { map.invalidateSize(); }, 200);
 });
 
-// 2. ELEMENTOS GRÁFICOS PREDEFINIDOS (Ejemplos)
 var marker = L.marker([4.6097, -74.0817]).addTo(map);
 var circle = L.circle([4.6099, -74.0819], {
     color: 'red',
@@ -26,7 +21,6 @@ var circle = L.circle([4.6099, -74.0819], {
     radius: 500
 }).addTo(map);
 
-// 3. VARIABLES GLOBALES PARA REPORTES
 var marcadorTemporal;
 var listaDeReportes = []; // Para el Requerimiento de "Ver Marcadores"
 const motorBusqueda = L.Control.Geocoder.nominatim();
@@ -37,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
     M.Modal.init(document.querySelectorAll('.modal'));
     M.FormSelect.init(document.querySelectorAll('select'));
 
-    // --- FUNCIONALIDAD: BUSCADOR DE DIRECCIONES (RF 2) ---
     const inputBusqueda = document.getElementById('search-address');
     if (inputBusqueda) {
         inputBusqueda.addEventListener('keydown', function(e) {
@@ -94,7 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// 5. EVENTO: SELECCIÓN DE PUNTO POR CLIC (RF 3)
 map.on('click', function(e) {
     const coordenadas = e.latlng;
     
@@ -103,12 +95,10 @@ map.on('click', function(e) {
         map.removeLayer(marcadorTemporal);
     }
 
-    // Colocar marcador temporal azul
     marcadorTemporal = L.marker(coordenadas).addTo(map)
         .bindPopup("¿Reportar incidente aquí?")
         .openPopup();
 
-    // Guardar coordenadas para usarlas en el botón de confirmar
     window.coordenadasIncidente = coordenadas;
 
     // Abrir el modal automáticamente
