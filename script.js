@@ -1,163 +1,144 @@
 'use strict';
 
-document.addEventListener('DOMContentLoaded', () => {
+// ===== AJUSTE MAPA (TU MÉTODO ORIGINAL) =====
+const mapEl = document.getElementById('map');
+mapEl.style.height = "calc(100vh - 64px)";
+mapEl.style.width = "100%";
 
-  // 🔥 Inicializar Materialize
-  M.AutoInit();
+// ===== MAPA =====
+const map = L.map('map').setView([4.6097, -74.0817], 12);
 
-  // 🔥 Validar Leaflet
-  if (!window.L) {
-    console.error('Leaflet no cargó');
-    return;
-  }
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
 
-  // ===== MAPA =====
-  const map = L.map('map').setView([4.6097, -74.0817], 12);
-
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19
-  }).addTo(map);
-
+window.addEventListener('load', () => {
   setTimeout(() => map.invalidateSize(), 200);
+});
 
-  // ===== GEOCODER =====
-  let motorBusqueda = null;
+// ===== GEOCODER (LUPA) =====
+const geocoderControl = L.Control.geocoder({
+  defaultMarkGeocode: false,
+  placeholder: "Buscar en Bogotá..."
+})
+.on('markgeocode', function(e) {
 
-  if (L.Control.Geocoder) {
-    motorBusqueda = L.Control.Geocoder.nominatim({
-      geocodingQueryParams: {
-        countrycodes: 'co',
-        'accept-language': 'es'
-      }
-    });
-  }
+  const center = e.geocode.center;
 
-  // ===== BUSCADOR =====
-  let marcadorBusqueda = null;
+  map.setView(center, 16);
 
-  async function buscarDireccion() {
-    if (!motorBusqueda) {
-      M.toast({ html: 'Geocoder no disponible', classes: 'red' });
-      return;
-    }
+  L.marker(center).addTo(map)
+    .bindPopup(`<b>${e.geocode.name}</b>`)
+    .openPopup();
+})
+.addTo(map);
 
-    const input = document.getElementById('search-address');
-    const query = input.value.trim();
+// ===== BUSCADOR PERSONALIZADO =====
+const inputBusqueda = document.getElementById('search-address');
+const searchIcon = document.getElementById('search-icon');
 
-    if (!query) return;
+function buscarDireccion() {
+  let direccion = inputBusqueda.value.trim();
+  if (!direccion) return;
 
-    M.toast({ html: 'Buscando...', classes: 'blue' });
+  direccion = direccion.replace('#', ' ');
+  direccion = direccion.replace('-', ' ');
+  direccion += ', Bogotá, Colombia';
 
-    motorBusqueda.geocode(query + ', Bogotá, Colombia', (results) => {
+  geocoderControl.options.geocoder.geocode(direccion, function(results) {
 
-      if (!results || results.length === 0) {
-        M.toast({ html: 'No encontrado', classes: 'red' });
-        return;
-      }
-
+    if (results.length > 0) {
       const r = results[0];
-
-      if (!r.center) {
-        console.warn('Sin coordenadas');
-        return;
-      }
 
       map.setView(r.center, 16);
 
-      if (marcadorBusqueda) {
-        map.removeLayer(marcadorBusqueda);
-      }
-
-      marcadorBusqueda = L.marker(r.center)
-        .addTo(map)
-        .bindPopup(r.name)
+      L.marker(r.center).addTo(map)
+        .bindPopup(`<b>${r.name}</b>`)
         .openPopup();
-    });
-  }
 
-  document.getElementById('search-icon')
-    .addEventListener('click', buscarDireccion);
-
-  document.getElementById('search-address')
-    .addEventListener('keydown', e => {
-      if (e.key === 'Enter') buscarDireccion();
-    });
-
-  // ===== REPORTES =====
-  let marcadorTemp = null;
-  let reportes = JSON.parse(localStorage.getItem('reportes')) || [];
-
-  function guardar() {
-    localStorage.setItem('reportes', JSON.stringify(reportes));
-  }
-
-  function pintarReportes() {
-    reportes.forEach(r => {
-      L.marker(r.coords)
-        .addTo(map)
-        .bindPopup(`<b>${r.tipo}</b><br>${r.descripcion}`);
-    });
-  }
-
-  pintarReportes();
-
-  // click en mapa
-  map.on('click', (e) => {
-    if (marcadorTemp) {
-      map.removeLayer(marcadorTemp);
+    } else {
+      M.toast({html: 'No se encontró la dirección', classes: 'red'});
     }
+  });
+}
 
-    marcadorTemp = L.marker(e.latlng).addTo(map);
+inputBusqueda.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    buscarDireccion();
+  }
+});
 
-    M.toast({ html: 'Ubicación seleccionada', classes: 'green' });
+searchIcon.addEventListener('click', buscarDireccion);
+
+// ===== MATERIALIZE =====
+document.addEventListener('DOMContentLoaded', () => {
+  M.AutoInit();
+});
+
+// ===== REPORTES =====
+let marcadorTemporal;
+let listaDeReportes = [];
+
+map.on('click', (e) => {
+
+  if (marcadorTemporal) {
+    map.removeLayer(marcadorTemporal);
+  }
+
+  marcadorTemporal = L.marker(e.latlng).addTo(map)
+    .bindPopup("¿Reportar aquí?")
+    .openPopup();
+
+  window.coordenadasIncidente = e.latlng;
+
+  const modal = M.Modal.getInstance(document.getElementById('reportar'));
+  if (modal) modal.open();
+});
+
+// confirmar
+document.getElementById('confirmar-reporte').addEventListener('click', () => {
+
+  if (!window.coordenadasIncidente) {
+    M.toast({html: 'Selecciona ubicación', classes: 'red'});
+    return;
+  }
+
+  const descripcion = document.getElementById('incidente-descripcion').value;
+  const tipo = document.getElementById('tipo-marcador').value;
+
+  const marker = L.marker(window.coordenadasIncidente).addTo(map)
+    .bindPopup(`<b>${tipo}</b><br>${descripcion}`)
+    .openPopup();
+
+  listaDeReportes.push({
+    tipo,
+    descripcion,
+    coords: window.coordenadasIncidente
   });
 
-  // confirmar reporte
-  document.getElementById('confirmar-reporte')
-    .addEventListener('click', () => {
+  if (marcadorTemporal) map.removeLayer(marcadorTemporal);
 
-      if (!marcadorTemp) {
-        M.toast({ html: 'Selecciona ubicación', classes: 'red' });
-        return;
-      }
+  const modal = M.Modal.getInstance(document.getElementById('reportar'));
+  modal.close();
 
-      const descripcion = document.getElementById('incidente-descripcion').value;
-      const tipo = document.getElementById('tipo-marcador').value;
+  M.toast({html: 'Reporte guardado', classes: 'green'});
+});
 
-      const nuevo = {
-        coords: marcadorTemp.getLatLng(),
-        descripcion,
-        tipo
-      };
+// ===== LISTA =====
+document.getElementById('markers-list').addEventListener('click', () => {
 
-      reportes.push(nuevo);
-      guardar();
+  const ul = document.getElementById('markers-list-content');
+  ul.innerHTML = '';
 
-      marcadorTemp.bindPopup(`<b>${tipo}</b><br>${descripcion}`);
+  listaDeReportes.forEach(r => {
+    const li = document.createElement('li');
+    li.textContent = `${r.tipo} - ${r.descripcion}`;
+    ul.appendChild(li);
+  });
+});
 
-      marcadorTemp = null;
-
-      M.toast({ html: 'Reporte guardado', classes: 'green' });
-    });
-
-  // ===== LISTA =====
-  document.getElementById('markers-list')
-    .addEventListener('click', () => {
-
-      const ul = document.getElementById('markers-list-content');
-      ul.innerHTML = '';
-
-      reportes.forEach(r => {
-        const li = document.createElement('li');
-        li.textContent = `${r.tipo} - ${r.descripcion}`;
-        ul.appendChild(li);
-      });
-    });
-
-  // ===== EMERGENCIA =====
-  document.getElementById('llamar-emergencia')
-    .addEventListener('click', () => {
-      window.location.href = 'tel:123';
-    });
-
+// ===== EMERGENCIA =====
+document.getElementById('llamar-emergencia').addEventListener('click', () => {
+  window.location.href = 'tel:123';
 });

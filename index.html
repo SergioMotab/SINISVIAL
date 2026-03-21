@@ -1,141 +1,104 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SinisVial ⚠️</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href ="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
-    <link rel="stylesheet" href="styles.css"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  </head>
-  <body>
-    <!-- Barra de navegación -->
-    <nav class="blue darken-3" id="navbar">
-      <div class="nav-wrapper">
-        <a href="#" class="brand-logo" style="margin-left:10px;">SinisVial ⚠️</a>
-        <ul id="nav-mobile" class="right hide-on-med-and-down">
-          <li>
-            <div class="input-field" style="margin:0; position:relative;">
-              <input id="search-address" type="text" placeholder="Buscar dirección en Bogotá..." style="background:white; border-radius:20px; padding-left:35px; width:220px;">
-              <span class="material-icons" id="search-icon" style="position:absolute; left:10px; top:8px; color:#1976d2; cursor:pointer;">search</span>
-            </div>
-          </li>
-          <li><a href="#tutorial" id="tutorial-btn">Tutorial</a></li>
-          <li><a href="#reportar" id="report-btn">Reportar Incidente</a></li>
-          <li><a href="#emergencia" id="emergency-btn">Emergencia</a></li>
-          <li><a href="#markers-list" id="show-markers-btn">Ver Marcadores</a></li>
-        </ul>
-      </div>
-    </nav>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SinisVial ⚠️</title>
 
-    <!-- Mapa -->
-    <div id="map"></div>
+  <!-- Materialize -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-    <!-- Modal de Login -->
-    <div id="login" class="modal">
-      <div class="modal-content">
-        <h4>Ingresar</h4>
-        <div class="input-field">
-          <input type="text" id="login-name" placeholder="Nombre">
-          <label for="login-name">Nombre</label>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <!-- Geocoder -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
+
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+
+    #map {
+      height: calc(100vh - 64px);
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- NAV -->
+<nav class="blue darken-3">
+  <div class="nav-wrapper">
+    <a href="#" class="brand-logo" style="margin-left:10px;">SinisVial ⚠️</a>
+
+    <ul class="right hide-on-med-and-down">
+      <li>
+        <div class="input-field" style="margin:0; position:relative;">
+          <input id="search-address" type="text"
+                 placeholder="Buscar dirección en Bogotá..."
+                 style="background:white; border-radius:20px; padding-left:35px; width:220px;">
+          <span class="material-icons" id="search-icon"
+                style="position:absolute; left:10px; top:8px; cursor:pointer;">search</span>
         </div>
-        <div class="input-field">
-          <input type="password" id="login-password" placeholder="Contraseña">
-          <label for="login-password">Contraseña</label>
-        </div>
-        <button class="btn blue" id="login-submit">Ingresar</button>
-        <button class="btn green" id="login-guest">Ingresar sin registrar</button>
-      </div>
+      </li>
+
+      <li><a href="#reportar" class="modal-trigger">Reportar</a></li>
+      <li><a href="#markers-list" class="modal-trigger">Marcadores</a></li>
+      <li><a href="#emergencia" class="modal-trigger">Emergencia</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div id="map"></div>
+
+<!-- MODAL REPORTAR -->
+<div id="reportar" class="modal">
+  <div class="modal-content">
+    <h4>Reportar Incidente</h4>
+
+    <div class="input-field">
+      <input type="text" id="incidente-descripcion">
+      <label>Descripción</label>
     </div>
 
-    <!-- Modal de Registro -->
-    <div id="register" class="modal">
-      <div class="modal-content">
-        <h4>Registrarse</h4>
-        <div class="input-field">
-          <input type="text" id="register-name" placeholder="Nombre">
-          <label for="register-name">Nombre</label>
-        </div>
-        <div class="input-field">
-          <input type="password" id="register-password" placeholder="Contraseña">
-          <label for="register-password">Contraseña</label>
-        </div>
-        <button class="btn blue" id="register-submit">Registrarse</button>
-      </div>
+    <div class="input-field">
+      <select id="tipo-marcador">
+        <option value="danger">Peligro</option>
+        <option value="caution">Precaución</option>
+        <option value="accident">Accidente</option>
+      </select>
+      <label>Tipo</label>
     </div>
 
-    <!-- Modal de Reportar Incidente -->
-    <div id="reportar" class="modal">
-      <div class="modal-content">
-        <h4>Reportar Incidente</h4>
-        <div class="input-field">
-          <input type="text" id="incidente-descripcion" placeholder="Descripción del incidente">
-          <label for="incidente-descripcion">Descripción</label>
-        </div>
-        <div class="input-field">
-          <select id="tipo-marcador">
-            <option value="danger">Peligro</option>
-            <option value="caution">Precaución</option>
-            <option value="no-entry">No Pase</option>
-            <option value="accident">Accidente</option>
-          </select>
-          <label>Tipo de Marcador</label>
-        </div>
-        <button class="btn blue" id="confirmar-reporte">Confirmar</button>
-      </div>
-    </div>
+    <button class="btn blue" id="confirmar-reporte">Confirmar</button>
+  </div>
+</div>
 
-    <!-- Modal de Descripción del Marcador -->
-    <div id="marker-description" class="modal">
-      <div class="modal-content">
-        <h4>Descripción del Marcador</h4>
-        <p id="marker-description-text"></p>
-      </div>
-      <div class="modal-footer">
-        <a href="#!" class="modal-close btn blue">Cerrar</a>
-      </div>
-    </div>
+<!-- LISTA -->
+<div id="markers-list" class="modal">
+  <div class="modal-content">
+    <h4>Marcadores</h4>
+    <ul id="markers-list-content"></ul>
+  </div>
+</div>
 
-    <!-- Lista de marcadores -->
-    <div id="markers-list" class="modal">
-      <div class="modal-content">
-        <h4>Marcadores Reportados</h4>
-        <ul id="markers-list-content"></ul>
-      </div>
-      <div class="modal-footer">
-        <a href="#!" class="modal-close btn blue">Cerrar</a>
-      </div>
-    </div>
+<!-- EMERGENCIA -->
+<div id="emergencia" class="modal">
+  <div class="modal-content">
+    <h4>Emergencia</h4>
+    <button class="btn red" id="llamar-emergencia">Llamar 123</button>
+  </div>
+</div>
 
-    <!-- Tutorial -->
-    <div id="tutorial" class="modal">
-      <div class="modal-content">
-        <h4>¿Cómo usar SinisVial?</h4>
-        <p>1. <strong>Buscar dirección:</strong> Usa el campo de búsqueda para encontrar una ubicación.</p>
-        <p>2. <strong>Reportar un incidente:</strong> Haz clic en el botón "Reportar Incidente" y selecciona la ubicación en el mapa.</p>
-        <p>3. <strong>Ver marcadores:</strong> Usa el botón "Ver Marcadores" para ver todos los marcadores reportados.</p>
-        <p>4. <strong>Eliminar marcadores:</strong> Haz clic en un marcador y selecciona "Eliminar".</p>
-      </div>
-      <div class="modal-footer">
-        <a href="#!" class="modal-close btn blue">Cerrar</a>
-      </div>
-    </div>
+<!-- SCRIPTS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script src="script.js"></script>
 
-    <!-- Botón de emergencia -->
-    <div id="emergencia" class="modal">
-      <div class="modal-content">
-        <h4>¿Necesitas ayuda de emergencia?</h4>
-        <p>Presiona el botón para contactar a los servicios de emergencia.</p>
-        <button class="btn red" id="llamar-emergencia">Llamar al 123</button>
-      </div>
-    </div>
-
-    <!-- Scripts -->
-     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-     <script src="script.js"></script>
-  </body>
+</body>
 </html>
