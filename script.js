@@ -25,6 +25,19 @@ var marcadorTemporal;
 var listaDeReportes = []; // Para el Requerimiento de "Ver Marcadores"
 const motorBusqueda = L.Control.Geocoder.nominatim();
 
+L.Control.geocoder({
+    defaultMarkGeocode: false
+})
+.on('markgeocode', function(e) {
+    const center = e.geocode.center;
+    map.setView(center, 16);
+
+    L.marker(center).addTo(map)
+        .bindPopup(e.geocode.name)
+        .openPopup();
+})
+.addTo(map);
+
 // 4. LÓGICA PRINCIPAL (Al cargar el DOM)
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar componentes de Materialize (Modales y Selects)
@@ -40,8 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!direccion) return;
 
                 // Geocodificación enfocada en Bogotá
-                motorBusqueda.geocode(direccion + ", Bogotá", function(results) {
-                    if (results && results.length > 0) {
+                motorBusqueda.geocode(direccion, function(results){
+                    if (results.length > 0){
                         const r = results[0];
                         map.setView(r.center, 16);
                         L.marker(r.center).addTo(map)
