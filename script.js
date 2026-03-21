@@ -43,18 +43,7 @@ var marcadorTemporal;
 var listaDeReportes = []; // Para el Requerimiento de "Ver Marcadores"
 const motorBusqueda = L.Control.Geocoder.nominatim();
 
-L.Control.geocoder({
-    defaultMarkGeocode: false
-})
-.on('markgeocode', function(e) {
-    const center = e.geocode.center;
-    map.setView(center, 16);
 
-    L.marker(center).addTo(map)
-        .bindPopup(e.geocode.name)
-        .openPopup();
-})
-.addTo(map);
 
 // 4. LÓGICA PRINCIPAL (Al cargar el DOM)
 document.addEventListener('DOMContentLoaded', function() {
