@@ -4,6 +4,8 @@ document.getElementById('map').style.width = "100%";
 
 var map = L.map('map').setView([4.6097, -74.0817], 12);
 
+let marcadorBusqueda;
+
 
 // Motor de búsqueda para la barra de navegación
 
@@ -44,12 +46,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const direccion = inputBusqueda.value.trim();
         if (!direccion) return;
 
-        motorBusqueda.geocode(direccion, function(results) {
+        motorBusqueda.geocode(direccion+" Bogotá, Colombia", function(results) {
             if (results.length > 0) {
                 const r = results[0];
                 map.setView(r.center, 16);
-                L.marker(r.center).addTo(map)
-                    .bindPopup("<b>Ubicación:</b><br>" + r.name)
+                if (marcadorBusqueda) {
+                    map.removeLayer(marcadorBusqueda);
+                }
+                marcadorBusqueda = L.marker(r.center).addTo(map)
+                    .bindPopup(r.name)
                     .openPopup();
             } else {
                 M.toast({html: 'No se encontró la dirección', classes: 'red'});
