@@ -1,11 +1,9 @@
 'use strict';
 
-// ===== AJUSTE MAPA (TU MÉTODO ORIGINAL) =====
+// ===== MAPA =====
 const mapEl = document.getElementById('map');
 mapEl.style.height = "calc(100vh - 64px)";
-mapEl.style.width = "100%";
 
-// ===== MAPA =====
 const map = L.map('map').setView([4.6097, -74.0817], 12);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -16,129 +14,98 @@ window.addEventListener('load', () => {
   setTimeout(() => map.invalidateSize(), 200);
 });
 
-// ===== GEOCODER (LUPA) =====
+// ===== GEOCODER =====
 const geocoderControl = L.Control.geocoder({
-  defaultMarkGeocode: false,
-  placeholder: "Buscar en Bogotá..."
-})
-.on('markgeocode', function(e) {
+  defaultMarkGeocode: false
+}).on('markgeocode', function(e) {
 
   const center = e.geocode.center;
 
   map.setView(center, 16);
 
   L.marker(center).addTo(map)
-    .bindPopup(`<b>${e.geocode.name}</b>`)
-    .openPopup();
-})
-.addTo(map);
-
-// ===== BUSCADOR PERSONALIZADO =====
-const inputBusqueda = document.getElementById('search-address');
-const searchIcon = document.getElementById('search-icon');
-
-function buscarDireccion() {
-  let direccion = inputBusqueda.value.trim();
-  if (!direccion) return;
-
-  direccion = direccion.replace('#', ' ');
-  direccion = direccion.replace('-', ' ');
-  direccion += ', Bogotá, Colombia';
-
-  geocoderControl.options.geocoder.geocode(direccion, function(results) {
-
-    if (results.length > 0) {
-      const r = results[0];
-
-      map.setView(r.center, 16);
-
-      L.marker(r.center).addTo(map)
-        .bindPopup(`<b>${r.name}</b>`)
-        .openPopup();
-
-    } else {
-      M.toast({html: 'No se encontró la dirección', classes: 'red'});
-    }
-  });
-}
-
-inputBusqueda.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    buscarDireccion();
-  }
-});
-
-searchIcon.addEventListener('click', buscarDireccion);
-
-// ===== MATERIALIZE =====
-document.addEventListener('DOMContentLoaded', () => {
-  M.AutoInit();
-});
-
-// ===== REPORTES =====
-let marcadorTemporal;
-let listaDeReportes = [];
-
-map.on('click', (e) => {
-
-  if (marcadorTemporal) {
-    map.removeLayer(marcadorTemporal);
-  }
-
-  marcadorTemporal = L.marker(e.latlng).addTo(map)
-    .bindPopup("¿Reportar aquí?")
+    .bindPopup(e.geocode.name)
     .openPopup();
 
-  window.coordenadasIncidente = e.latlng;
+}).addTo(map);
 
-  const modal = M.Modal.getInstance(document.getElementById('reportar'));
-  if (modal) modal.open();
-});
+// ===== INPUT =====
+const input = document.getElementById('search-address');
+const suggestionsBox = document.getElementById('suggestions');
 
-// confirmar
-document.getElementById('confirmar-reporte').addEventListener('click', () => {
+let timeout = null;
 
-  if (!window.coordenadasIncidente) {
-    M.toast({html: 'Selecciona ubicación', classes: 'red'});
+// ===== AUTOCOMPLETADO =====
+input.addEventListener('input', () => {
+
+  clearTimeout(timeout);
+
+  const query = input.value.trim();
+  if (query.length < 3) {
+    suggestionsBox.innerHTML = '';
     return;
   }
 
-  const descripcion = document.getElementById('incidente-descripcion').value;
-  const tipo = document.getElementById('tipo-marcador').value;
+  timeout = setTimeout(async () => {
 
-  const marker = L.marker(window.coordenadasIncidente).addTo(map)
-    .bindPopup(`<b>${tipo}</b><br>${descripcion}`)
-    .openPopup();
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=co&q=${encodeURIComponent(query + ' Bogotá Colombia')}`;
 
-  listaDeReportes.push({
-    tipo,
-    descripcion,
-    coords: window.coordenadasIncidente
-  });
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
 
-  if (marcadorTemporal) map.removeLayer(marcadorTemporal);
+      suggestionsBox.innerHTML = '';
 
-  const modal = M.Modal.getInstance(document.getElementById('reportar'));
-  modal.close();
+      data.forEach(place => {
 
-  M.toast({html: 'Reporte guardado', classes: 'green'});
+        const div = document.createElement('div');
+        div.className = 'suggestion-item';
+        div.textContent = place.display_name;
+
+        div.addEventListener('click', () => {
+
+          const coords = [parseFloat(place.lat), parseFloat(place.lon)];
+
+          map.setView(coords, 16);
+
+          L.marker(coords).addTo(map)
+            .bindPopup(place.display_name)
+            .openPopup();
+
+          input.value = place.display_name;
+          suggestionsBox.innerHTML = '';
+        });
+
+        suggestionsBox.appendChild(div);
+      });
+
+    } catch (e) {
+      console.error(e);
+    }
+
+  }, 400);
 });
 
-// ===== LISTA =====
-document.getElementById('markers-list').addEventListener('click', () => {
+// ===== BUSQUEDA ENTER =====
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
 
-  const ul = document.getElementById('markers-list-content');
-  ul.innerHTML = '';
+    const query = input.value.trim();
 
-  listaDeReportes.forEach(r => {
-    const li = document.createElement('li');
-    li.textContent = `${r.tipo} - ${r.descripcion}`;
-    ul.appendChild(li);
-  });
+    geocoderControl.options.geocoder.geocode(query + ', Bogotá, Colombia', (results) => {
+
+      if (results.length > 0) {
+        geocoderControl.fire('markgeocode', { geocode: results[0] });
+      } else {
+        M.toast({html: 'No encontrado', classes: 'red'});
+      }
+    });
+  }
 });
 
-// ===== EMERGENCIA =====
-document.getElementById('llamar-emergencia').addEventListener('click', () => {
-  window.location.href = 'tel:123';
+// cerrar sugerencias
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#suggestions') && !e.target.closest('#search-address')) {
+    suggestionsBox.innerHTML = '';
+  }
 });

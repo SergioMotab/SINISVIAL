@@ -11,8 +11,6 @@
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
-  <!-- Geocoder -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
 
   <style>
@@ -24,6 +22,27 @@
     #map {
       height: calc(100vh - 64px);
       width: 100%;
+    }
+
+    /* SUGERENCIAS */
+    #suggestions {
+      position: absolute;
+      top: 64px;
+      right: 20px;
+      width: 280px;
+      background: white;
+      border-radius: 10px;
+      z-index: 999;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .suggestion-item {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .suggestion-item:hover {
+      background: #f0f0f0;
     }
   </style>
 </head>
@@ -39,8 +58,8 @@
       <li>
         <div class="input-field" style="margin:0; position:relative;">
           <input id="search-address" type="text"
-                 placeholder="Buscar dirección en Bogotá..."
-                 style="background:white; border-radius:20px; padding-left:35px; width:220px;">
+                 placeholder="Buscar dirección..."
+                 style="background:white; border-radius:20px; padding-left:35px; width:260px;">
           <span class="material-icons" id="search-icon"
                 style="position:absolute; left:10px; top:8px; cursor:pointer;">search</span>
         </div>
@@ -53,6 +72,10 @@
   </div>
 </nav>
 
+<!-- SUGERENCIAS -->
+<div id="suggestions"></div>
+
+<!-- MAPA -->
 <div id="map"></div>
 
 <!-- MODAL REPORTAR -->
