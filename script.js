@@ -4,23 +4,9 @@ document.getElementById('map').style.width = "100%";
 
 var map = L.map('map').setView([4.6097, -74.0817], 12);
 
-const geocoder = L.Control.geocoder({
-    defaultMarkGeocode: false,
-    placeholder: "Buscar dirección en Bogotá...",
-    errorMessage: "No se encontró la dirección"
-})
-.on('markgeocode', function(e) {
-    const center = e.geocode.center;
 
-    // Mover el mapa
-    map.setView(center, 16);
-
-    // Crear marcador
-    L.marker(center).addTo(map)
-        .bindPopup(`<b>${e.geocode.name}</b>`)
-        .openPopup();
-})
-.addTo(map);
+// Motor de búsqueda para la barra de navegación
+const motorBusqueda = L.Control.Geocoder.nominatim();
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -51,29 +37,35 @@ document.addEventListener('DOMContentLoaded', function() {
     M.Modal.init(document.querySelectorAll('.modal'));
     M.FormSelect.init(document.querySelectorAll('select'));
 
-   inputBusqueda.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-
-        const direccion = e.target.value.trim();
+    // --- BUSCADOR EN LA BARRA DE NAVEGACIÓN ---
+    const inputBusqueda = document.getElementById('search-address');
+    const searchIcon = document.getElementById('search-icon');
+    function buscarDireccion() {
+        const direccion = inputBusqueda.value.trim();
         if (!direccion) return;
-
         motorBusqueda.geocode(direccion, function(results) {
             if (results.length > 0) {
                 const r = results[0];
-
                 map.setView(r.center, 16);
-
                 L.marker(r.center).addTo(map)
                     .bindPopup("<b>Ubicación:</b><br>" + r.name)
                     .openPopup();
-
             } else {
                 M.toast({html: 'No se encontró la dirección', classes: 'red'});
+
+    if (inputBusqueda) {
+        inputBusqueda.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                buscarDireccion();
             }
         });
     }
-});
+    if (searchIcon) {
+        searchIcon.addEventListener('click', function() {
+            buscarDireccion();
+        });
+    }
 
     // --- FUNCIONALIDAD: CONFIRMAR REPORTE (RF 3) ---
     const btnConfirmar = document.getElementById('confirmar-reporte');

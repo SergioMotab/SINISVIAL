@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SinisVial ⚠️</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <link rel="stylesheet" href ="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
     <link rel="stylesheet" href="styles.css"/>
@@ -14,11 +15,12 @@
     <!-- Barra de navegación -->
     <nav class="blue darken-3" id="navbar">
       <div class="nav-wrapper">
-        <a href="#" class="brand-logo">SinisVial ⚠️</a>
+        <a href="#" class="brand-logo" style="margin-left:10px;">SinisVial ⚠️</a>
         <ul id="nav-mobile" class="right hide-on-med-and-down">
           <li>
-            <div class="input-field" style="margin: 0; padding: 0;">
-              <input id="search-address" type="text" placeholder="Buscar dirección">
+            <div class="input-field" style="margin:0; position:relative;">
+              <input id="search-address" type="text" placeholder="Buscar dirección en Bogotá..." style="background:white; border-radius:20px; padding-left:35px; width:220px;">
+              <span class="material-icons" id="search-icon" style="position:absolute; left:10px; top:8px; color:#1976d2; cursor:pointer;">search</span>
             </div>
           </li>
           <li><a href="#tutorial" id="tutorial-btn">Tutorial</a></li>
