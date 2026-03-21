@@ -24,25 +24,30 @@
       width: 100%;
     }
 
-    /* SUGERENCIAS */
-    #suggestions {
-      position: absolute;
-      top: 64px;
-      right: 20px;
-      width: 280px;
-      background: white;
+    /* Geocoder en navbar */
+    #geocoder-navbar {
+      width: 320px;
+      margin-top: 10px;
+    }
+
+    .leaflet-control-geocoder {
+      width: 100% !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    .leaflet-control-geocoder-form input {
+      background: white !important;
+      border-radius: 20px !important;
+      padding-left: 15px !important;
+      height: 36px !important;
+    }
+
+    .leaflet-control-geocoder-alternatives {
+      max-height: 300px;
+      overflow-y: auto;
       border-radius: 10px;
-      z-index: 999;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-
-    .suggestion-item {
-      padding: 10px;
-      cursor: pointer;
-    }
-
-    .suggestion-item:hover {
-      background: #f0f0f0;
     }
   </style>
 </head>
@@ -56,13 +61,7 @@
 
     <ul class="right hide-on-med-and-down">
       <li>
-        <div class="input-field" style="margin:0; position:relative;">
-          <input id="search-address" type="text"
-                 placeholder="Buscar dirección..."
-                 style="background:white; border-radius:20px; padding-left:35px; width:260px;">
-          <span class="material-icons" id="search-icon"
-                style="position:absolute; left:10px; top:8px; cursor:pointer;">search</span>
-        </div>
+        <div id="geocoder-navbar"></div>
       </li>
 
       <li><a href="#reportar" class="modal-trigger">Reportar</a></li>
@@ -72,10 +71,6 @@
   </div>
 </nav>
 
-<!-- SUGERENCIAS -->
-<div id="suggestions"></div>
-
-<!-- MAPA -->
 <div id="map"></div>
 
 <!-- MODAL REPORTAR -->
