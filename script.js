@@ -6,7 +6,7 @@ var map = L.map('map').setView([4.6097, -74.0817], 12);
 
 
 // Motor de búsqueda para la barra de navegación
-const motorBusqueda = L.Control.Geocoder.nominatim();
+
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function buscarDireccion() {
         const direccion = inputBusqueda.value.trim();
         if (!direccion) return;
+
         motorBusqueda.geocode(direccion, function(results) {
             if (results.length > 0) {
                 const r = results[0];
@@ -52,7 +53,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     .openPopup();
             } else {
                 M.toast({html: 'No se encontró la dirección', classes: 'red'});
-
+            }
+        });
+    }
     if (inputBusqueda) {
         inputBusqueda.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
