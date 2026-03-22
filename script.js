@@ -1,181 +1,248 @@
-'use strict';
+(function () {
+  'use strict';
 
-document.addEventListener('DOMContentLoaded', () => {
+  /* ===========================
+     OBSERVER (EventBus)
+  ============================ */
+  const EventBus = {
+    _events: Object.create(null),
 
-  // ===== VALIDACIONES DE LIBRERÍAS =====
-  if (typeof L === 'undefined') {
-    console.error('Leaflet NO está cargado');
-    return;
-  }
+    on(evt, cb) {
+      (this._events[evt] ||= []).push(cb);
+    },
 
-  if (!L.Control || !L.Control.Geocoder) {
-    console.error('Leaflet Control Geocoder NO está cargado');
-    return;
-  }
+    emit(evt, payload) {
+      (this._events[evt] || []).forEach(fn => fn(payload));
+    }
+  };
 
-  if (typeof M === 'undefined') {
-    console.error('Materialize NO está cargado');
-    return;
-  }
+  /* ===========================
+     SINGLETON MAPA
+  ============================ */
+  const MapSingleton = (function () {
+    let map = null;
 
-  // ===== INICIALIZAR MATERIALIZE =====
-  M.Modal.init(document.querySelectorAll('.modal'));
-  M.FormSelect.init(document.querySelectorAll('select'));
+    function init() {
+      if (map) return map;
 
-  // ===== MAPA =====
-  const map = L.map('map').setView([4.6097, -74.0817], 12);
+      map = L.map('map').setView([4.6097, -74.0817], 12);
 
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors, Tiles style by Humanitarian OpenStreetMap Team hosted by OpenStreetMap France'
-  }).addTo(map);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
 
-  map.whenReady(() => {
-    setTimeout(() => map.invalidateSize(), 200);
-  });
+      return map;
+    }
 
-  // ===== GEOCODER (SEGURO) =====
-  let geocoderControl;
+    function get() {
+      return map;
+    }
 
-  map.whenReady(() => {
+    return { init, get };
+  })();
 
-    geocoderControl = L.Control.geocoder({
-      defaultMarkGeocode: false,
-      placeholder: "Buscar en Bogotá...",
-      errorMessage: "No se encontró",
-      geocoder: L.Control.Geocoder.nominatim({
-        geocodingQueryParams: {
-          countrycodes: 'co',
-          'accept-language': 'es'
-        }
+  /* ===========================
+     MODELO
+  ============================ */
+  const ReportModel = (function () {
+    const KEY = 'reportes';
+    let data = [];
+
+    function load() {
+      data = JSON.parse(localStorage.getItem(KEY)) || [];
+      return [...data];
+    }
+
+    function save() {
+      localStorage.setItem(KEY, JSON.stringify(data));
+    }
+
+    function add(report) {
+      const newReport = { id: Date.now(), ...report };
+      data.push(newReport);
+      save();
+      EventBus.emit('report:added', newReport);
+      return newReport;
+    }
+
+    function getAll() {
+      return [...data];
+    }
+
+    return { load, add, getAll };
+  })();
+
+  /* ===========================
+     VISTA MAPA
+  ============================ */
+  const MapView = {
+    addMarker(coords, html) {
+      return L.marker(coords)
+        .addTo(MapSingleton.get())
+        .bindPopup(html);
+    },
+
+    focus(coords) {
+      MapSingleton.get().setView(coords, 17);
+    }
+  };
+
+  /* ===========================
+     VISTA UI
+  ============================ */
+  const UIView = {
+    init() {
+      M.Modal.init(document.querySelectorAll('.modal'));
+      M.FormSelect.init(document.querySelectorAll('select'));
+    },
+
+    get(id) {
+      return document.getElementById(id);
+    },
+
+    toast(msg, color = '') {
+      M.toast({ html: msg, classes: color });
+    }
+  };
+
+  /* ===========================
+     GEOCODER
+  ============================ */
+  const GeocoderService = {
+    init() {
+      const control = L.Control.geocoder({
+        defaultMarkGeocode: false
       })
-    })
-    .on('markgeocode', function(e) {
+        .on('markgeocode', function (e) {
+          const center = e.geocode.center;
 
-      const center = e.geocode.center;
+          MapSingleton.get().setView(center, 16);
 
-      map.setView(center, 16);
+          const partes = e.geocode.name.split(',');
+          const direccion = partes.slice(0, 3).join(',');
 
-      L.marker(center).addTo(map)
-        .bindPopup(`<b>${e.geocode.name}</b>`)
-        .openPopup();
+          MapView.addMarker(center, `<b>${direccion}</b>`).openPopup();
+        })
+        .addTo(MapSingleton.get());
 
-    })
-    .addTo(map);
+      setTimeout(() => {
+        const navbar = document.getElementById('geocoder-navbar');
+        const el = document.querySelector('.leaflet-control-geocoder');
+        if (navbar && el) navbar.appendChild(el);
+      }, 0);
+    }
+  };
 
-    // 🔥 MOVER A NAVBAR (CUANDO YA EXISTE)
-    requestAnimationFrame(() => {
+  /* ===========================
+     CONTROLLER REPORTES
+  ============================ */
+  const ReportController = (function () {
+    let coordsSeleccionadas = null;
+    let marcadorTemporal = null;
 
-      const navbar = document.getElementById('geocoder-navbar');
-      const geocoderEl = document.querySelector('.leaflet-control-geocoder');
+    function init() {
+      // cargar reportes
+      ReportModel.load().forEach(r => {
+        const html = buildPopup(r);
+        MapView.addMarker(r.coords, html);
+      });
 
-      if (navbar && geocoderEl) {
-        navbar.appendChild(geocoderEl);
-      } else {
-        console.warn('No se pudo mover el geocoder');
+      // click mapa
+      MapSingleton.get().on('click', (e) => {
+        coordsSeleccionadas = e.latlng;
+
+        if (marcadorTemporal) {
+          MapSingleton.get().removeLayer(marcadorTemporal);
+        }
+
+        marcadorTemporal = MapView.addMarker(e.latlng, '¿Reportar aquí?').openPopup();
+
+        EventBus.emit('ui:openModal');
+      });
+
+      // confirmar
+      UIView.get('confirmar-reporte')?.addEventListener('click', confirmar);
+    }
+
+    function buildPopup(r) {
+      return `<b>${r.tipo.toUpperCase()}</b><br>${r.descripcion}`;
+    }
+
+    function confirmar() {
+      if (!coordsSeleccionadas) {
+        return UIView.toast('Selecciona ubicación', 'red');
       }
 
-    });
+      const descripcion = UIView.get('incidente-descripcion').value.trim();
+      const tipo = UIView.get('tipo-marcador').value;
 
-  });
+      if (!descripcion) {
+        return UIView.toast('Agrega descripción', 'orange');
+      }
 
-  // ===== PERSISTENCIA =====
-  function guardarReportes(data) {
-    localStorage.setItem('reportes', JSON.stringify(data));
-  }
+      const nuevo = ReportModel.add({
+        tipo,
+        descripcion,
+        coords: coordsSeleccionadas
+      });
 
-  function cargarReportes() {
-    return JSON.parse(localStorage.getItem('reportes')) || [];
-  }
+      MapView.addMarker(nuevo.coords, buildPopup(nuevo)).openPopup();
 
-  let listaDeReportes = cargarReportes();
+      if (marcadorTemporal) {
+        MapSingleton.get().removeLayer(marcadorTemporal);
+        marcadorTemporal = null;
+      }
 
-  // ===== REPINTAR REPORTES =====
-  listaDeReportes.forEach(r => {
-    L.marker(r.coords).addTo(map)
-      .bindPopup(`<b>${r.tipo}</b><br>${r.descripcion}`);
-  });
+      M.Modal.getInstance(UIView.get('reportar')).close();
+      UIView.get('incidente-descripcion').value = '';
 
-  // ===== CLICK EN MAPA =====
-  let marcadorTemporal = null;
-
-  map.on('click', (e) => {
-
-    if (marcadorTemporal) {
-      map.removeLayer(marcadorTemporal);
+      UIView.toast('Reporte guardado', 'green');
     }
 
-    marcadorTemporal = L.marker(e.latlng).addTo(map)
-      .bindPopup("¿Reportar aquí?")
-      .openPopup();
+    return { init };
+  })();
 
-    window.coordenadasIncidente = e.latlng;
+  /* ===========================
+     CONTROLLER UI
+  ============================ */
+  const UIController = (function () {
 
-    const modalEl = document.getElementById('reportar');
-    const modal = M.Modal.getInstance(modalEl);
 
-    if (modal) {
-      modal.open();
-    } else {
-      console.error('Modal no inicializado');
-    }
-  });
+    function init() {
+      EventBus.on('ui:openModal', () => {
+        const modal = M.Modal.getInstance(UIView.get('reportar'));
+        modal?.open();
+      });
 
-  // ===== CONFIRMAR REPORTE =====
-  const btnConfirmar = document.getElementById('confirmar-reporte');
+      // Mostrar historial de reportes en el modal de marcadores
+      UIView.get('markers-list')?.addEventListener('click', () => {
+        const ul = UIView.get('markers-list-content');
+        ul.innerHTML = '';
+        ReportModel.getAll().forEach(r => {
+          const li = document.createElement('li');
+          li.textContent = `${r.tipo} - ${r.descripcion}`;
+          ul.appendChild(li);
+        });
+      });
 
-  btnConfirmar?.addEventListener('click', () => {
-
-    if (!window.coordenadasIncidente) {
-      M.toast({ html: 'Selecciona ubicación', classes: 'red' });
-      return;
-    }
-
-    const descripcion = document.getElementById('incidente-descripcion').value;
-    const tipo = document.getElementById('tipo-marcador').value;
-
-    const nuevo = {
-      tipo,
-      descripcion,
-      coords: window.coordenadasIncidente
-    };
-
-    listaDeReportes.push(nuevo);
-    guardarReportes(listaDeReportes);
-
-    L.marker(nuevo.coords).addTo(map)
-      .bindPopup(`<b>${tipo}</b><br>${descripcion}`)
-      .openPopup();
-
-    if (marcadorTemporal) {
-      map.removeLayer(marcadorTemporal);
-      marcadorTemporal = null;
+      UIView.get('llamar-emergencia')?.addEventListener('click', () => {
+        window.location.href = 'tel:123';
+      });
     }
 
-    const modal = M.Modal.getInstance(document.getElementById('reportar'));
-    modal?.close();
+    return { init };
+  })();
 
-    document.getElementById('incidente-descripcion').value = "";
-
-    M.toast({ html: 'Reporte guardado', classes: 'green' });
+  /* ===========================
+     INIT APP
+  ============================ */
+  document.addEventListener('DOMContentLoaded', () => {
+    UIView.init();
+    MapSingleton.init();
+    GeocoderService.init();
+    ReportController.init();
+    UIController.init();
   });
 
-  // ===== LISTA DE MARCADORES =====
-  document.getElementById('markers-list')?.addEventListener('click', () => {
-
-    const ul = document.getElementById('markers-list-content');
-    ul.innerHTML = '';
-
-    listaDeReportes.forEach(r => {
-      const li = document.createElement('li');
-      li.textContent = `${r.tipo} - ${r.descripcion}`;
-      ul.appendChild(li);
-    });
-  });
-
-  // ===== EMERGENCIA =====
-  document.getElementById('llamar-emergencia')?.addEventListener('click', () => {
-    window.location.href = 'tel:123';
-  });
-
-});
+})();
