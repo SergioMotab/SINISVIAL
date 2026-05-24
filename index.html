@@ -3,60 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SinisVial ⚠️</title>
-
-  <!-- Materialize -->
+  <title>SinisVial</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
-
-  <!-- CSS -->
   <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
 
 <nav class="blue darken-3">
   <div class="nav-wrapper">
-    <a href="#" class="brand-logo" style="margin-left:10px;">SinisVial ⚠️</a>
+    <a href="#" class="brand-logo" style="margin-left:10px;">SinisVial</a>
     <ul class="right hide-on-med-and-down">
       <li><div id="geocoder-navbar"></div></li>
       <li><a onclick="M.Modal.getInstance(document.getElementById('reportar')).open(); return false;">Reportar</a></li>
       <li><a onclick="M.Modal.getInstance(document.getElementById('markers-list')).open(); return false;">Marcadores</a></li>
       <li><a onclick="M.Modal.getInstance(document.getElementById('emergencia')).open(); return false;">Emergencia</a></li>
+      <li><a id="btn-mi-ubicacion" title="Usar mi ubicacion"><i class="material-icons">my_location</i></a></li>
     </ul>
   </div>
 </nav>
 
 <div id="map"></div>
 
-<!-- MODAL REPORTAR -->
 <div id="reportar" class="modal">
   <div class="modal-content">
     <h4>Reportar Incidente</h4>
-
     <div class="input-field">
       <input type="text" id="incidente-descripcion">
-      <label for="incidente-descripcion">Descripción</label>
+      <label for="incidente-descripcion">Descripcion</label>
     </div>
-
     <div class="input-field">
       <select id="tipo-marcador">
         <option value="danger">Peligro</option>
-        <option value="caution">Precaución</option>
+        <option value="caution">Precaucion</option>
         <option value="accident">Accidente</option>
       </select>
       <label>Tipo</label>
     </div>
-
     <button class="btn blue" id="confirmar-reporte">Confirmar</button>
   </div>
 </div>
 
-<!-- LISTA -->
 <div id="markers-list" class="modal">
   <div class="modal-content">
     <h4>Marcadores</h4>
@@ -64,7 +53,6 @@
   </div>
 </div>
 
-<!-- EMERGENCIA -->
 <div id="emergencia" class="modal">
   <div class="modal-content">
     <h4>Emergencia</h4>
@@ -72,7 +60,6 @@
   </div>
 </div>
 
-<!-- Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
