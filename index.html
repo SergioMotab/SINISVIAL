@@ -13,57 +13,17 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
 
-  <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-    }
-
-    #map {
-      height: calc(100vh - 64px);
-      width: 100%;
-    }
-
-    /* Geocoder en navbar */
-    #geocoder-navbar {
-      width: 320px;
-      margin-top: 10px;
-    }
-
-    .leaflet-control-geocoder {
-      width: 100% !important;
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-    }
-
-    .leaflet-control-geocoder-form input {
-      background: white !important;
-      border-radius: 20px !important;
-      padding-left: 15px !important;
-      height: 36px !important;
-    }
-
-    .leaflet-control-geocoder-alternatives {
-      max-height: 300px;
-      overflow-y: auto;
-      border-radius: 10px;
-    }
-  </style>
+  <!-- TU CSS -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-<!-- NAV -->
 <nav class="blue darken-3">
   <div class="nav-wrapper">
     <a href="#" class="brand-logo" style="margin-left:10px;">SinisVial ⚠️</a>
-
     <ul class="right hide-on-med-and-down">
-      <li>
-        <div id="geocoder-navbar"></div>
-      </li>
-
+      <li><div id="geocoder-navbar"></div></li>
       <li><a href="#reportar" class="modal-trigger">Reportar</a></li>
       <li><a href="#markers-list" class="modal-trigger">Marcadores</a></li>
       <li><a href="#emergencia" class="modal-trigger">Emergencia</a></li>
@@ -80,7 +40,7 @@
 
     <div class="input-field">
       <input type="text" id="incidente-descripcion">
-      <label>Descripción</label>
+      <label for="incidente-descripcion">Descripción</label>
     </div>
 
     <div class="input-field">
@@ -112,7 +72,7 @@
   </div>
 </div>
 
-<!-- SCRIPTS -->
+<!-- Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
