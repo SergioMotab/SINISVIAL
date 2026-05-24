@@ -1,55 +1,84 @@
-const express = require("express");
-const path = require("path");
-const { Pool } = require("pg");
+const express = require('express');
+const { Pool } = require('pg');
 
 const app = express();
 
+/* ==========================
+   MIDDLEWARE
+========================== */
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname)));
-
-// ruta
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
-
-//  conexión DB
+/* ==========================
+   CONEXIÓN A POSTGRES
+========================== */
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-pool.query(`
-  CREATE TABLE IF NOT EXISTS reportes (
-    id SERIAL PRIMARY KEY,
-    tipo TEXT,
-    descripcion TEXT,
-    lat DOUBLE PRECISION,
-    lng DOUBLE PRECISION
-  );
-`);
+/* ==========================
+   OBTENER REPORTES
+========================== */
+app.get('/reportes', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM reportes ORDER BY id DESC'
+    );
 
-// GET
-app.get("/reportes", async (req, res) => {
-  const result = await pool.query("SELECT * FROM reportes");
-  res.json(result.rows);
+    res.json(result.rows);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: 'Error obteniendo reportes'
+    });
+  }
 });
 
-// POST
-app.post("/reportes", async (req, res) => {
-  const { tipo, descripcion, coords } = req.body;
+/* ==========================
+   CREAR REPORTE
+========================== */
+app.post('/reportes', async (req, res) => {
+  try {
+    const { tipo, descripcion, coords } = req.body;
 
-  const result = await pool.query(
-    "INSERT INTO reportes (tipo, descripcion, lat, lng) VALUES ($1,$2,$3,$4) RETURNING *",
-    [tipo, descripcion, coords.lat, coords.lng]
-  );
+    if (!tipo || !descripcion || !coords) {
+      return res.status(400).json({
+        error: 'Datos incompletos'
+      });
+    }
 
-  res.json(result.rows[0]);
+    const result = await pool.query(
+      `
+      INSERT INTO reportes (tipo, descripcion, lat, lng)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+      `,
+      [
+        tipo,
+        descripcion,
+        coords.lat,
+        coords.lng
+      ]
+    );
+
+    return res.status(201).json(result.rows[0]);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: 'Error creando reporte'
+    });
+  }
 });
 
-//PUERTO DINÁMICO 
+/* ==========================
+   SERVER
+========================== */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("Servidor corriendo en puerto", PORT);
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
