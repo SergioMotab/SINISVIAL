@@ -4,21 +4,25 @@ body {
   font-family: 'Roboto', Arial, sans-serif;
   background: #f4f6f8;
 }
+
 #map {
-  width: 100vw;
-  height: 70vh;
+  width: 100%;
+  height: calc(100vh - 64px);
   min-height: 400px;
-  margin-bottom: 30px;
 }
+
 nav {
   margin-bottom: 0;
 }
+
 .modal {
   border-radius: 10px;
 }
+
 input[type="text"], input[type="password"] {
   background: #e3eaf2;
 }
+
 .btn {
   border-radius: 20px;
 }
