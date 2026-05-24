@@ -1,6 +1,9 @@
 (function () {
 'use strict';
 
+/* ===========================
+ EVENT BUS
+=========================== */
 const EventBus = {
   _events: {},
   on(evt, cb) {
@@ -11,6 +14,9 @@ const EventBus = {
   }
 };
 
+/* ===========================
+ MAPA
+=========================== */
 const MapSingleton = (() => {
   let map = null;
 
@@ -33,38 +39,35 @@ const MapSingleton = (() => {
   return { init, get };
 })();
 
+/* ===========================
+ ✅ MODELO (CORREGIDO A DB)
+=========================== */
 const ReportModel = (() => {
-  const KEY = 'reportes';
-  let data = [];
 
-  function load() {
-    try {
-      data = JSON.parse(localStorage.getItem(KEY)) || [];
-    } catch {
-      data = [];
-    }
-    return [...data];
+  async function load() {
+    const res = await fetch("/reportes");
+    return await res.json();
   }
 
-  function save() {
-    localStorage.setItem(KEY, JSON.stringify(data));
+  async function add(report) {
+    const res = await fetch("/reportes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(report),
+    });
+
+    return await res.json();
   }
 
-  function add(report) {
-    const newReport = { id: Date.now(), ...report };
-    data.push(newReport);
-    save();
-    EventBus.emit('report:added', newReport);
-    return newReport;
-  }
+  return { load, add };
 
-  function getAll() {
-    return [...data];
-  }
-
-  return { load, add, getAll };
 })();
 
+/* ===========================
+ MAP VIEW
+=========================== */
 const MapView = {
   addMarker(coords, html) {
     return L.marker(coords)
@@ -73,6 +76,9 @@ const MapView = {
   }
 };
 
+/* ===========================
+ UI VIEW
+=========================== */
 const UIView = {
   init() {
     M.Modal.init(document.querySelectorAll('.modal'));
@@ -86,6 +92,9 @@ const UIView = {
   }
 };
 
+/* ===========================
+ GEOCODER
+=========================== */
 const GeocoderService = {
   init() {
     const control = L.Control.geocoder({ defaultMarkGeocode: false })
@@ -104,13 +113,20 @@ const GeocoderService = {
   }
 };
 
+/* ===========================
+ CONTROLLER REPORTES
+=========================== */
 const ReportController = (() => {
   let coordsSeleccionadas = null;
   let marcadorTemporal = null;
 
   function init() {
-    ReportModel.load().forEach(r => {
-      MapView.addMarker(r.coords, popup(r));
+
+    // ✅ cargar desde DB
+    ReportModel.load().then(reportes => {
+      reportes.forEach(r => {
+        MapView.addMarker([r.lat, r.lng], popup(r));
+      });
     });
 
     MapSingleton.get().on('click', (e) => {
@@ -131,7 +147,8 @@ const ReportController = (() => {
     return `<b>${r.tipo.toUpperCase()}</b><br>${r.descripcion}`;
   }
 
-  function confirmar() {
+  // ✅ AHORA ES ASYNC
+  async function confirmar() {
     if (!coordsSeleccionadas) return UIView.toast('Selecciona ubicación', 'red');
 
     const descripcion = UIView.get('incidente-descripcion').value.trim();
@@ -139,13 +156,15 @@ const ReportController = (() => {
 
     if (!descripcion) return UIView.toast('Describe el incidente', 'orange');
 
-    const nuevo = ReportModel.add({
+    // ✅ guardar en DB
+    const nuevo = await ReportModel.add({
       tipo,
       descripcion,
       coords: coordsSeleccionadas
     });
 
-    MapView.addMarker(nuevo.coords, popup(nuevo)).openPopup();
+    // ✅ usar lat/lng del backend
+    MapView.addMarker([nuevo.lat, nuevo.lng], popup(nuevo)).openPopup();
 
     if (marcadorTemporal) {
       MapSingleton.get().removeLayer(marcadorTemporal);
@@ -161,21 +180,13 @@ const ReportController = (() => {
   return { init };
 })();
 
+/* ===========================
+ UI CONTROLLER
+=========================== */
 const UIController = (() => {
   function init() {
     EventBus.on('ui:openModal', () => {
       M.Modal.getInstance(UIView.get('reportar')).open();
-    });
-
-    UIView.get('markers-list').addEventListener('click', () => {
-      const ul = UIView.get('markers-list-content');
-      ul.innerHTML = '';
-
-      ReportModel.getAll().forEach(r => {
-        const li = document.createElement('li');
-        li.textContent = `${r.tipo} - ${r.descripcion}`;
-        ul.appendChild(li);
-      });
     });
 
     UIView.get('llamar-emergencia').addEventListener('click', () => {
@@ -186,6 +197,9 @@ const UIController = (() => {
   return { init };
 })();
 
+/* ===========================
+ INIT
+=========================== */
 document.addEventListener('DOMContentLoaded', () => {
   UIView.init();
   MapSingleton.init();
