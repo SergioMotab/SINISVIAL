@@ -6,15 +6,14 @@ const app = express();
 
 app.use(express.json());
 
-// ✅ servir archivos estáticos correctamente
 app.use(express.static(path.join(__dirname)));
 
-// ✅ ruta principal (IMPORTANTE)
+// ruta
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// ✅ conexión DB
+//  conexión DB
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
