@@ -1,211 +1,65 @@
 (function () {
-'use strict';
-
-/* ===========================
- EVENT BUS
-=========================== */
-const EventBus = {
-  _events: {},
-  on(evt, cb) {
-    (this._events[evt] ||= []).push(cb);
-  },
-  emit(evt, payload) {
-    (this._events[evt] || []).forEach(fn => fn(payload));
-  }
-};
-
-/* ===========================
- MAPA
-=========================== */
-const MapSingleton = (() => {
-  let map = null;
-
-  function init() {
-    if (map) return map;
-
-    map = L.map('map').setView([4.6097, -74.0817], 12);
-
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19
-    }).addTo(map);
-
-    return map;
-  }
-
-  function get() {
-    return map;
-  }
-
-  return { init, get };
-})();
-
-/* ===========================
- ✅ MODELO (CORREGIDO A DB)
-=========================== */
-const ReportModel = (() => {
-
-  async function load() {
-    const res = await fetch("/reportes");
-    return await res.json();
-  }
-
-  async function add(report) {
-    const res = await fetch("/reportes", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(report),
-    });
-
-    return await res.json();
-  }
-
-  return { load, add };
-
-})();
-
-/* ===========================
- MAP VIEW
-=========================== */
-const MapView = {
-  addMarker(coords, html) {
-    return L.marker(coords)
-      .addTo(MapSingleton.get())
-      .bindPopup(html);
-  }
-};
-
-/* ===========================
- UI VIEW
-=========================== */
-const UIView = {
-  init() {
-    M.Modal.init(document.querySelectorAll('.modal'));
-    M.FormSelect.init(document.querySelectorAll('select'));
-  },
-  get(id) {
-    return document.getElementById(id);
-  },
-  toast(msg, color = '') {
-    M.toast({ html: msg, classes: color });
-  }
-};
-
-/* ===========================
- GEOCODER
-=========================== */
-const GeocoderService = {
-  init() {
-    const control = L.Control.geocoder({ defaultMarkGeocode: false })
-      .on('markgeocode', function (e) {
         const center = e.geocode.center;
-        MapSingleton.get().setView(center, 16);
-        MapView.addMarker(center, `<b>${e.geocode.name}</b>`);
+
+        map.setView(center, 16);
+
+        L.marker(center)
+          .addTo(map)
+          .bindPopup(e.geocode.name)
+          .openPopup();
       })
-      .addTo(MapSingleton.get());
+      .addTo(map);
 
     setTimeout(() => {
+
       const navbar = document.getElementById('geocoder-navbar');
-      const el = document.querySelector('.leaflet-control-geocoder');
-      if (navbar && el) navbar.appendChild(el);
-    });
-  }
-};
+      const geocoderElement = document.querySelector('.leaflet-control-geocoder');
 
-/* ===========================
- CONTROLLER REPORTES
-=========================== */
-const ReportController = (() => {
-  let coordsSeleccionadas = null;
-  let marcadorTemporal = null;
-
-  function init() {
-
-    // ✅ cargar desde DB
-    ReportModel.load().then(reportes => {
-      reportes.forEach(r => {
-        MapView.addMarker([r.lat, r.lng], popup(r));
-      });
-    });
-
-    MapSingleton.get().on('click', (e) => {
-      coordsSeleccionadas = e.latlng;
-
-      if (marcadorTemporal) {
-        MapSingleton.get().removeLayer(marcadorTemporal);
+      if (navbar && geocoderElement) {
+        navbar.appendChild(geocoderElement);
       }
 
-      marcadorTemporal = MapView.addMarker(e.latlng, '¿Reportar aquí?').openPopup();
-      EventBus.emit('ui:openModal');
-    });
-
-    UIView.get('confirmar-reporte').addEventListener('click', confirmar);
+    }, 100);
   }
 
-  function popup(r) {
-    return `<b>${r.tipo.toUpperCase()}</b><br>${r.descripcion}`;
-  }
+  /* ==========================
+     TOAST
+  ========================== */
+  function showToast(message, color = '') {
 
-  // ✅ AHORA ES ASYNC
-  async function confirmar() {
-    if (!coordsSeleccionadas) return UIView.toast('Selecciona ubicación', 'red');
-
-    const descripcion = UIView.get('incidente-descripcion').value.trim();
-    const tipo = UIView.get('tipo-marcador').value;
-
-    if (!descripcion) return UIView.toast('Describe el incidente', 'orange');
-
-    // ✅ guardar en DB
-    const nuevo = await ReportModel.add({
-      tipo,
-      descripcion,
-      coords: coordsSeleccionadas
-    });
-
-    // ✅ usar lat/lng del backend
-    MapView.addMarker([nuevo.lat, nuevo.lng], popup(nuevo)).openPopup();
-
-    if (marcadorTemporal) {
-      MapSingleton.get().removeLayer(marcadorTemporal);
-      marcadorTemporal = null;
-    }
-
-    M.Modal.getInstance(UIView.get('reportar')).close();
-    UIView.get('incidente-descripcion').value = '';
-
-    UIView.toast('Reporte guardado ✅', 'green');
-  }
-
-  return { init };
-})();
-
-/* ===========================
- UI CONTROLLER
-=========================== */
-const UIController = (() => {
-  function init() {
-    EventBus.on('ui:openModal', () => {
-      M.Modal.getInstance(UIView.get('reportar')).open();
-    });
-
-    UIView.get('llamar-emergencia').addEventListener('click', () => {
-      window.location.href = 'tel:123';
+    M.toast({
+      html: message,
+      classes: color
     });
   }
 
-  return { init };
-})();
+  /* ==========================
+     INICIALIZAR UI
+  ========================== */
+  function initUI() {
 
-/* ===========================
- INIT
-=========================== */
-document.addEventListener('DOMContentLoaded', () => {
-  UIView.init();
-  MapSingleton.init();
-  GeocoderService.init();
-  ReportController.init();
-  UIController.init();
-});
+    M.Modal.init(document.querySelectorAll('.modal'));
+    M.FormSelect.init(document.querySelectorAll('select'));
+
+    document
+      .getElementById('confirmar-reporte')
+      .addEventListener('click', submitReport);
+
+    document
+      .getElementById('llamar-emergencia')
+      .addEventListener('click', () => {
+
+        window.location.href = 'tel:123';
+      });
+  }
+
+  /* ==========================
+     START
+  ========================== */
+  document.addEventListener('DOMContentLoaded', () => {
+
+    initUI();
+    initMap();
+  });
 
 })();
