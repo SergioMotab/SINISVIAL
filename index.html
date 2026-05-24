@@ -20,13 +20,13 @@
 <body>
 
 <nav class="blue darken-3">
-  <div class="nav-wrapper container">
-    <a href="#" class="brand-logo">SinisVial ⚠️</a>
-
+  <div class="nav-wrapper">
+    <a href="#" class="brand-logo" style="margin-left:10px;">SinisVial ⚠️</a>
     <ul class="right hide-on-med-and-down">
       <li><div id="geocoder-navbar"></div></li>
-      <li><a href="#reportar" class="modal-trigger">Reportar</a></li>
-      <li><a href="#emergencia" class="modal-trigger">Emergencia</a></li>
+      <li><a onclick="M.Modal.getInstance(document.getElementById('reportar')).open(); return false;">Reportar</a></li>
+      <li><a onclick="M.Modal.getInstance(document.getElementById('markers-list')).open(); return false;">Marcadores</a></li>
+      <li><a onclick="M.Modal.getInstance(document.getElementById('emergencia')).open(); return false;">Emergencia</a></li>
     </ul>
   </div>
 </nav>
@@ -36,12 +36,11 @@
 <!-- MODAL REPORTAR -->
 <div id="reportar" class="modal">
   <div class="modal-content">
-
-    <h4>Reportar incidente</h4>
+    <h4>Reportar Incidente</h4>
 
     <div class="input-field">
       <input type="text" id="incidente-descripcion">
-      <label for="incidente-descripcion">Descripción del incidente</label>
+      <label for="incidente-descripcion">Descripción</label>
     </div>
 
     <div class="input-field">
@@ -50,26 +49,34 @@
         <option value="caution">Precaución</option>
         <option value="accident">Accidente</option>
       </select>
-      <label>Tipo de incidente</label>
+      <label>Tipo</label>
     </div>
 
-    <button class="btn blue waves-effect waves-light" id="confirmar-reporte">
-      Confirmar
-    </button>
-
+    <button class="btn blue" id="confirmar-reporte">Confirmar</button>
   </div>
 </div>
 
-<!-- MODAL EMERGENCIA -->
+<!-- LISTA -->
+<div id="markers-list" class="modal">
+  <div class="modal-content">
+    <h4>Marcadores</h4>
+    <ul id="markers-list-content"></ul>
+  </div>
+</div>
+
+<!-- EMERGENCIA -->
 <div id="emergencia" class="modal">
-  <div class="modal-content center-align">
+  <div class="modal-content">
     <h4>Emergencia</h4>
-
-    <p>Contacta rápidamente a emergencias.</p>
-
-    <button class="btn red" id="llamar-emergencia">
-      Llamar 123
-    </button>
+    <button class="btn red" id="llamar-emergencia">Llamar 123</button>
   </div>
 </div>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script src="script.js"></script>
+
+</body>
 </html>
