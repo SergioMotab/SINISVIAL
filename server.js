@@ -5,44 +5,47 @@ const { Pool } = require("pg");
 const app = express();
 
 app.use(express.json());
-
-// ✅ Sirve archivos estáticos desde la carpeta raíz
 app.use(express.static(__dirname));
 
-// ✅ Ruta principal
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// Conexión DB
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
-// ✅ Manejo de error si la DB falla
 pool.query(`
   CREATE TABLE IF NOT EXISTS reportes (
     id SERIAL PRIMARY KEY,
     tipo TEXT,
     descripcion TEXT,
     lat DOUBLE PRECISION,
-    lng DOUBLE PRECISION
+    lng DOUBLE PRECISION,
+    creado_en TIMESTAMP DEFAULT NOW()
   );
 `).catch(err => console.error("Error creando tabla:", err));
 
-// GET reportes
+setInterval(async () => {
+  try {
+    await pool.query("DELETE FROM reportes WHERE creado_en < NOW() - INTERVAL '2 hours'");
+  } catch (err) {
+    console.error("Error eliminando reportes:", err);
+  }
+}, 1000 * 60 * 10);
+
 app.get("/reportes", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM reportes");
+    const result = await pool.query(
+      "SELECT * FROM reportes WHERE creado_en > NOW() - INTERVAL '2 hours' ORDER BY creado_en DESC"
+    );
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Error al obtener reportes" });
   }
 });
 
-// POST reporte
 app.post("/reportes", async (req, res) => {
   try {
     const { tipo, descripcion, coords } = req.body;
@@ -52,14 +55,9 @@ app.post("/reportes", async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Error al guardar reporte" });
   }
 });
 
-// Puerto dinámico
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("Servidor corriendo en puerto", PORT);
-});
+app.listen(PORT, () => console.log("Servidor corriendo en puerto", PORT));
