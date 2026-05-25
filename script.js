@@ -99,9 +99,11 @@ const ReportController = (() => {
   }
 
   function init() {
-    ReportModel.load().then(reportes => {
-      reportes.forEach(r => MapView.addMarker([r.lat, r.lng], popup(r), r.tipo));
-    }).catch(err => console.error("Error cargando reportes:", err));
+    setTimeout(() => {
+      ReportModel.load().then(reportes => {
+        reportes.forEach(r => MapView.addMarker([r.lat, r.lng], popup(r), r.tipo));
+      }).catch(err => console.error("Error cargando reportes:", err));
+    }, 500);
 
     MapSingleton.get().on('click', (e) => {
       coordsSeleccionadas = e.latlng;
