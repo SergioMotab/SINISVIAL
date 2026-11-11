@@ -1,43 +1,42 @@
- {
-  box-sizing: border-box;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font: 700 11px/1 'Roboto', Arial, sans-serif;
+}
+.pin .material-icons { font-size: 16px; }
+.pin-danger   { background: #d32f2f; }
+.pin-caution  { background: #f9a825; }
+.pin-accident { background: #6a1b9a; }
+.pin-animal   { background: #ef6c00; }
+.pin-perdida     { background: #e91e63; }
+.pin-encontrada  { background: #2e7d32; }
+
+/* ---------- mascotas ---------- */
+.pet-foto {
+  display: block;
+  width: 180px;
+  max-width: 100%;
+  max-height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 6px;
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Roboto', Arial, sans-serif;
-  background: #f4f6f8;
+#mascotas-list-content .collection-item {
+  cursor: pointer;
+}
+#mascotas-list-content .collection-item:hover {
+  background: #eef3f8;
+}
+#mascotas-list-content .collection-item.avatar img.circle {
+  object-fit: cover;
 }
 
-#map {
-  width: 100%;
-  height: calc(100vh - 64px);
-}
-
-nav {
-  margin-bottom: 0;
-}
-
-.brand-logo {
-  font-size: 1.5rem !important;
-}
-
-.modal {
-  border-radius: 15px;
-}
-
-input[type="text"] {
-  background: #eef3f8 !important;
-  padding-left: 10px !important;
-  border-radius: 8px !important;
-}
-
-.btn {
-  border-radius: 20px;
-}
-
-.leaflet-popup-content {
-  font-size: 14px;
+/* El boton flotante debe quedar por encima de los controles de Leaflet */
+.fixed-action-btn {
+  z-index: 1001;
 }
 
 @media (max-width: 768px) {
