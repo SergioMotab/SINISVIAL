@@ -17,9 +17,11 @@
     <a href="#" class="brand-logo" style="margin-left:10px;">SinisVial</a>
     <ul class="right hide-on-med-and-down">
       <li><div id="geocoder-navbar"></div></li>
-      <li><a onclick="M.Modal.getInstance(document.getElementById('reportar')).open(); return false;">Reportar</a></li>
+      <li><a data-action="reportar">Reportar</a></li>
+      <li><a data-action="ver-mascotas"><i class="material-icons left">pets</i>Mascotas</a></li>
       <li><a onclick="M.Modal.getInstance(document.getElementById('markers-list')).open(); return false;">Marcadores</a></li>
       <li><a onclick="M.Modal.getInstance(document.getElementById('emergencia')).open(); return false;">Emergencia</a></li>
+      <li><a data-action="alertas" title="Alertas cercanas (incidentes y mascotas)"><i class="material-icons">notifications_none</i></a></li>
       <li><a id="btn-mi-ubicacion" title="Usar mi ubicacion"><i class="material-icons">my_location</i></a></li>
     </ul>
   </div>
@@ -27,11 +29,23 @@
 
 <div id="map"></div>
 
+<!-- Boton flotante: acceso a todo desde el celular (el menu superior se oculta en pantallas pequenas) -->
+<div class="fixed-action-btn hide-on-large-only">
+  <a class="btn-floating btn-large blue darken-3"><i class="large material-icons">menu</i></a>
+  <ul>
+    <li><a class="btn-floating red" data-action="emergencia" title="Emergencia"><i class="material-icons">phone</i></a></li>
+    <li><a class="btn-floating orange" data-action="ver-mascotas" title="Mascotas"><i class="material-icons">pets</i></a></li>
+    <li><a class="btn-floating green" data-action="alertas" title="Alertas cercanas"><i class="material-icons">notifications_none</i></a></li>
+    <li><a class="btn-floating blue" data-action="mi-ubicacion" title="Mi ubicacion"><i class="material-icons">my_location</i></a></li>
+    <li><a class="btn-floating grey darken-2" data-action="reportar" title="Reportar incidente"><i class="material-icons">report_problem</i></a></li>
+  </ul>
+</div>
+
 <div id="reportar" class="modal">
   <div class="modal-content">
     <h4>Reportar Incidente</h4>
     <div class="input-field">
-      <input type="text" id="incidente-descripcion">
+      <input type="text" id="incidente-descripcion" maxlength="200">
       <label for="incidente-descripcion">Descripcion</label>
     </div>
     <div class="input-field">
@@ -39,6 +53,7 @@
         <option value="danger">Peligro</option>
         <option value="caution">Precaucion</option>
         <option value="accident">Accidente</option>
+        <option value="animal">Animal en la via</option>
       </select>
       <label>Tipo</label>
     </div>
@@ -60,6 +75,73 @@
   </div>
 </div>
 
+<!-- Lista de mascotas reportadas -->
+<div id="mascotas-list" class="modal">
+  <div class="modal-content">
+    <h4>Mascotas</h4>
+    <p class="grey-text">Reportadas por la comunidad en los ultimos 30 dias. Toca una para verla en el mapa.</p>
+    <p>
+      <a class="btn-small blue" data-filtro="todas">Todas</a>
+      <a class="btn-small grey" data-filtro="perdida">Perdidas</a>
+      <a class="btn-small grey" data-filtro="encontrada">Encontradas</a>
+    </p>
+    <ul class="collection" id="mascotas-list-content"></ul>
+    <button class="btn orange" data-action="reportar-mascota">
+      <i class="material-icons left">add</i>Reportar mascota
+    </button>
+  </div>
+</div>
+
+<!-- Formulario para reportar una mascota perdida o encontrada -->
+<div id="reportar-mascota" class="modal">
+  <div class="modal-content">
+    <h4>Reportar mascota</h4>
+    <div class="input-field">
+      <select id="mascota-estado">
+        <option value="perdida" selected>Se me perdio mi mascota</option>
+        <option value="encontrada">Encontre una mascota</option>
+      </select>
+      <label>Situacion</label>
+    </div>
+    <div class="input-field">
+      <select id="mascota-especie">
+        <option value="perro" selected>Perro</option>
+        <option value="gato">Gato</option>
+        <option value="otro">Otro</option>
+      </select>
+      <label>Especie</label>
+    </div>
+    <div class="input-field">
+      <input type="text" id="mascota-nombre" maxlength="40">
+      <label for="mascota-nombre">Nombre (si lo sabes)</label>
+    </div>
+    <div class="input-field">
+      <textarea id="mascota-descripcion" class="materialize-textarea" maxlength="300"></textarea>
+      <label for="mascota-descripcion">Senas: color, tamano, collar, donde la viste</label>
+    </div>
+    <div class="input-field">
+      <input type="tel" id="mascota-contacto" maxlength="15">
+      <label for="mascota-contacto">Celular de contacto (10 digitos)</label>
+    </div>
+    <div class="file-field input-field">
+      <div class="btn blue">
+        <span>Foto</span>
+        <input type="file" id="mascota-foto" accept="image/*">
+      </div>
+      <div class="file-path-wrapper">
+        <input class="file-path" type="text" placeholder="Opcional, pero ayuda mucho" readonly>
+      </div>
+    </div>
+    <p>
+      <label>
+        <input type="checkbox" id="mascota-consent">
+        <span>Autorizo mostrar mi numero de celular publicamente en SinisVial para ayudar a reunir a la mascota con su familia.</span>
+      </label>
+    </p>
+    <button class="btn orange" id="confirmar-mascota">Publicar</button>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
@@ -67,3 +149,4 @@
 
 </body>
 </html>
+
