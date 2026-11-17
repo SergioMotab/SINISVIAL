@@ -6,6 +6,11 @@ const { Pool } = require("pg");
 const app = express();
 app.set("trust proxy", 1); // necesario para req.ip detras de Render/Heroku
 
+// Historial y puntos criticos
+const HISTORIAL_DIAS = 90;         // los reportes se conservan este tiempo (antes se borraban a las 2 h)
+const MIN_REPORTES_CRITICO = 3;    // reportes en una misma zona para considerarla critica (bajalo a 2 para una demo)
+const CELDA_GRADOS = 0.002;        // las zonas son celdas de ~220 m de lado
+
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   next();
@@ -57,7 +62,8 @@ pool.query(`
 
 setInterval(async () => {
   try {
-    await pool.query("DELETE FROM reportes WHERE creado_en < NOW() - INTERVAL '2 hours'");
+    // Los reportes ya no se borran a las 2 h: siguen en el historial hasta HISTORIAL_DIAS
+    await pool.query(`DELETE FROM reportes WHERE creado_en < NOW() - INTERVAL '${HISTORIAL_DIAS} days'`);
     await pool.query("DELETE FROM mascotas WHERE creado_en < NOW() - INTERVAL '30 days'");
   } catch (err) {
     console.error("Error eliminando registros vencidos:", err);
@@ -129,6 +135,42 @@ app.get("/reportes", async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: "Error al obtener reportes" });
+  }
+});
+
+// Reportes activos: lo ultimo que paso (2 h). Se dibujan en el mapa y disparan alertas.
+// Historial: todo lo de los ultimos HISTORIAL_DIAS dias, para consultar incidentes previos.
+app.get("/reportes/historial", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, tipo, descripcion, lat, lng, creado_en FROM reportes
+       WHERE creado_en > NOW() - INTERVAL '${HISTORIAL_DIAS} days'
+       ORDER BY creado_en DESC LIMIT 300`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Error al obtener el historial" });
+  }
+});
+
+// Puntos criticos: zonas (celdas de ~220 m) con MIN_REPORTES_CRITICO o mas reportes en el historial.
+// Las constantes se escriben en el SQL porque son del servidor, no vienen del usuario.
+app.get("/puntos-criticos", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT AVG(lat) AS lat, AVG(lng) AS lng, COUNT(*)::int AS total,
+              MODE() WITHIN GROUP (ORDER BY tipo) AS tipo_frecuente,
+              MAX(creado_en) AS ultimo
+       FROM reportes
+       WHERE creado_en > NOW() - INTERVAL '${HISTORIAL_DIAS} days'
+       GROUP BY FLOOR(lat / ${CELDA_GRADOS}), FLOOR(lng / ${CELDA_GRADOS})
+       HAVING COUNT(*) >= ${MIN_REPORTES_CRITICO}
+       ORDER BY total DESC, ultimo DESC
+       LIMIT 100`
+    );
+    res.json(result.rows.map((z) => ({ ...z, id: `${z.lat.toFixed(4)}_${z.lng.toFixed(4)}` })));
+  } catch (err) {
+    res.status(500).json({ error: "Error al obtener los puntos criticos" });
   }
 });
 
