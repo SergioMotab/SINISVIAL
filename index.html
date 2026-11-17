@@ -98,10 +98,69 @@ input[type="text"] {
   z-index: 1001;
 }
 
+/* ---------- alerta grande (baja distraccion: se lee de un vistazo) ---------- */
+.alerta-banner {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  color: #fff;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+.alerta-banner strong { font-size: 1.5rem; }
+.alerta-banner em { font-style: normal; font-weight: 500; }
+.alerta-banner.oculto { display: none; }
+.alerta-roja    { background: #c62828; }
+.alerta-naranja { background: #ef6c00; }
+.alerta-critica { background: #6a1b9a; }
+
+/* ---------- emergencias ---------- */
+nav ul a.link-emergencia { background: #c62828; }
+.emerg-llamar {
+  display: block;
+  width: 100%;
+  height: auto;
+  line-height: 1.3;
+  padding: 14px 12px;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  text-align: center;
+}
+.emerg-llamar small { font-size: 0.8rem; font-weight: 400; }
+.emerg-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 14px;
+}
+.emerg-fila .btn { flex: 1 1 130px; padding: 0 10px; text-align: center; }
+
+/* ---------- historial ---------- */
+#zonas-list-content .collection-item,
+#historial-list-content .collection-item {
+  cursor: pointer;
+}
+#zonas-list-content .collection-item:hover,
+#historial-list-content .collection-item:hover {
+  background: #eef3f8;
+}
+
 @media (max-width: 768px) {
   .brand-logo {
     font-size: 1.2rem !important;
   }
+}
+
+@media (max-width: 600px) {
+  .alerta-banner { top: 56px; }
 }
   </style>
 </head>
@@ -114,8 +173,8 @@ input[type="text"] {
       <li><div id="geocoder-navbar"></div></li>
       <li><a data-action="reportar">Reportar</a></li>
       <li><a data-action="ver-mascotas"><i class="material-icons left">pets</i>Mascotas</a></li>
-      <li><a onclick="M.Modal.getInstance(document.getElementById('markers-list')).open(); return false;">Marcadores</a></li>
-      <li><a onclick="M.Modal.getInstance(document.getElementById('emergencia')).open(); return false;">Emergencia</a></li>
+      <li><a data-action="ver-historial"><i class="material-icons left">history</i>Historial</a></li>
+      <li><a data-action="emergencia" class="link-emergencia"><i class="material-icons left">phone</i>Emergencia</a></li>
       <li><a data-action="alertas" title="Alertas cercanas (incidentes y mascotas)"><i class="material-icons">notifications_none</i></a></li>
       <li><a id="btn-mi-ubicacion" title="Usar mi ubicacion"><i class="material-icons">my_location</i></a></li>
     </ul>
@@ -124,11 +183,15 @@ input[type="text"] {
 
 <div id="map"></div>
 
+<!-- Alerta grande de proximidad: incidente, zona critica o mascota cerca. Toca para cerrarla. -->
+<div id="alerta-banner" class="alerta-banner oculto" role="alert" aria-live="assertive"></div>
+
 <!-- Boton flotante: acceso a todo desde el celular (el menu superior se oculta en pantallas pequenas) -->
 <div class="fixed-action-btn hide-on-large-only">
   <a class="btn-floating btn-large blue darken-3"><i class="large material-icons">menu</i></a>
   <ul>
     <li><a class="btn-floating red" data-action="emergencia" title="Emergencia"><i class="material-icons">phone</i></a></li>
+    <li><a class="btn-floating purple darken-2" data-action="ver-historial" title="Historial y zonas criticas"><i class="material-icons">history</i></a></li>
     <li><a class="btn-floating orange" data-action="ver-mascotas" title="Mascotas"><i class="material-icons">pets</i></a></li>
     <li><a class="btn-floating green" data-action="alertas" title="Alertas cercanas"><i class="material-icons">notifications_none</i></a></li>
     <li><a class="btn-floating blue" data-action="mi-ubicacion" title="Mi ubicacion"><i class="material-icons">my_location</i></a></li>
@@ -156,17 +219,70 @@ input[type="text"] {
   </div>
 </div>
 
-<div id="markers-list" class="modal">
+<!-- Historial de incidentes y zonas criticas -->
+<div id="historial" class="modal">
   <div class="modal-content">
-    <h4>Marcadores</h4>
-    <ul id="markers-list-content"></ul>
+    <h4>Historial</h4>
+    <p class="grey-text">Incidentes reportados en los ultimos 90 dias. Toca uno para verlo en el mapa.</p>
+    <div class="switch">
+      <label>
+        Ocultar
+        <input type="checkbox" id="switch-criticos" checked>
+        <span class="lever"></span>
+        Zonas criticas en el mapa
+      </label>
+    </div>
+    <h5>Zonas criticas</h5>
+    <p class="grey-text"><small>Lugares donde se repiten los incidentes (varios reportes en la misma zona).</small></p>
+    <ul class="collection" id="zonas-list-content"></ul>
+    <h5>Reportes anteriores</h5>
+    <p>
+      <a class="btn-small blue" data-hfiltro="todos">Todos</a>
+      <a class="btn-small grey" data-hfiltro="accident">Accidentes</a>
+      <a class="btn-small grey" data-hfiltro="danger">Peligros</a>
+      <a class="btn-small grey" data-hfiltro="caution">Precauciones</a>
+      <a class="btn-small grey" data-hfiltro="animal">Animales</a>
+    </p>
+    <ul class="collection" id="historial-list-content"></ul>
   </div>
 </div>
 
+<!-- Emergencia: llamar y compartir ubicacion y detalles -->
 <div id="emergencia" class="modal">
   <div class="modal-content">
     <h4>Emergencia</h4>
-    <button class="btn red" id="llamar-emergencia">Llamar 123</button>
+    <a class="btn btn-large red emerg-llamar" href="tel:123">
+      <i class="material-icons left">phone</i>Llamar 123<br><small>Policia, bomberos y ambulancia (linea unica)</small>
+    </a>
+    <div class="emerg-fila">
+      <a class="btn orange darken-2" href="tel:119"><i class="material-icons left">local_fire_department</i>Bomberos 119</a>
+      <a class="btn red darken-3" href="tel:132"><i class="material-icons left">local_hospital</i>Cruz Roja 132</a>
+    </div>
+
+    <p class="grey-text">Llama primero. Despues comparte tu ubicacion y los detalles con quien te ayude.</p>
+    <div class="input-field">
+      <select id="emerg-tipo">
+        <option value="accidente" selected>Accidente de transito</option>
+        <option value="heridos">Persona herida / emergencia medica</option>
+        <option value="incendio">Incendio o riesgo de incendio</option>
+        <option value="otro">Otra emergencia vial</option>
+      </select>
+      <label>Que ocurre</label>
+    </div>
+    <div class="input-field">
+      <input type="text" id="emerg-detalles" maxlength="200">
+      <label for="emerg-detalles">Detalles (opcional): vehiculos, heridos, referencias</label>
+    </div>
+    <p id="emerg-ubicacion" class="grey-text">Ubicacion: obteniendo...</p>
+
+    <div class="emerg-fila">
+      <a class="btn green" data-emerg="whatsapp"><i class="material-icons left">chat</i>WhatsApp</a>
+      <a class="btn blue" data-emerg="sms"><i class="material-icons left">sms</i>SMS</a>
+      <a class="btn blue darken-3" id="emerg-compartir" data-emerg="compartir"><i class="material-icons left">share</i>Compartir</a>
+      <a class="btn grey darken-1" data-emerg="copiar"><i class="material-icons left">content_copy</i>Copiar</a>
+    </div>
+    <a class="btn orange" data-emerg="avisar"><i class="material-icons left">campaign</i>Avisar a otros conductores</a>
+    <p class="grey-text"><small>Si avisas a otros conductores, el tipo y los detalles se publican en el mapa. No escribas datos personales.</small></p>
   </div>
 </div>
 
@@ -244,4 +360,3 @@ input[type="text"] {
 
 </body>
 </html>
-
